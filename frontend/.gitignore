@@ -1,4 +1,9 @@
 node_modules/
+src/vendor/
+dev-preview*.log
+tests/.fixtures/
+mock-preview*.log
+qa-preview*.log
 dist/
 *.zip
 *.tar.gz

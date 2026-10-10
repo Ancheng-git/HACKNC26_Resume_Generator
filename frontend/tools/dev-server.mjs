@@ -3,10 +3,12 @@ import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { dirname, extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { copyThree } from './vendor.mjs';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const root = resolve(projectRoot, process.argv[2] === 'dist' ? 'dist' : 'src');
 const port = Number(process.env.PORT || 5173);
+if (process.argv[2] !== 'dist') await copyThree(projectRoot);
 const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
 
 createServer(async (request, response) => {

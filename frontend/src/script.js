@@ -12,21 +12,31 @@ for (let index = 0; index < 5; index++) {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.pdf,.docx,.doc';
+  const picker = document.createElement('button');
+  picker.type = 'button'; picker.className = 'file-picker'; picker.textContent = 'Choose file';
+  picker.setAttribute('aria-label', `Choose supporting file ${index + 1}`);
+  picker.addEventListener('click', () => input.click());
+  const selection = document.createElement('small'); selection.textContent = 'No file selected';
+  input.tabIndex = -1;
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.textContent = 'Clear';
   remove.setAttribute('aria-label', `Clear supporting file ${index + 1}`);
-  input.addEventListener('change', () => { if (input.files.length) state.pendingSupplements[index] = input.files[0]; });
-  remove.addEventListener('click', () => { input.value = ''; state.pendingSupplements[index] = null; });
-  label.append(input, remove);
+  input.addEventListener('change', () => { if (input.files.length) { state.pendingSupplements[index] = input.files[0]; selection.textContent = input.files[0].name; } });
+  remove.addEventListener('click', () => { input.value = ''; state.pendingSupplements[index] = null; selection.textContent = 'No file selected'; });
+  label.append(input, picker, selection, remove);
   $('#supplementary-files').append(label);
 }
+$('#resume-picker').addEventListener('click', () => fileInput.click());
+$('#photo-picker').addEventListener('click', () => $('#photo-input').click());
 $('#photo-input').addEventListener('change', () => {
   const photo = $('#photo-input').files[0];
   if (!photo) return;
   if (!/\.(jpg|jpeg|png)$/i.test(photo.name)) {
-    window.alert('Please select a JPG or PNG photo.');
+    $('#upload-status').textContent = 'Please select a JPG or PNG photo.';
+    state.pendingPhoto = null;
     $('#photo-input').value = '';
+    render();
     return;
   }
   state.pendingPhoto = photo;
@@ -50,10 +60,11 @@ function setChestOpen(open) {
   chest.setAttribute('aria-label', open ? 'Close your experience chest' : 'Open your experience chest');
   inventory.hidden = !open;
   $('#chest-open-label').textContent = open ? 'Close chest ×' : 'Open chest ↗';
-  if (open) fileInput.focus();
+  document.dispatchEvent(new CustomEvent('workshop-chest', { detail: { open } }));
+  if (open) $('#resume-picker').focus();
 }
 function chooseFile(files) {
-  if (files.length !== 1) { window.alert('Please choose exactly one personal file.'); return; }
+  if (files.length !== 1) { $('#upload-status').textContent = 'Please choose exactly one resume file.'; return; }
   state.pendingFile = files[0];
   fileInput.value = '';
   render();
@@ -80,15 +91,16 @@ $('#save-profile').addEventListener('click', async () => {
     $('#upload-warnings').textContent = '';
     render();
     const pack = await uploadBackground(resume, photo, supplements);
-    $('#upload-warnings').textContent = Array.isArray(pack.warnings) ? pack.warnings.join(' · ') : pack.warnings ? JSON.stringify(pack.warnings) : '';
+    $('#upload-warnings').textContent = englishMessage(pack.warnings, 'The backend reported a materials warning. Please review your uploaded files.');
     if (!pack.ready_for_generation || !pack.background_id) throw new Error('These materials are not ready for generation. Upload a complete package with your photo.');
     Object.assign(state, { file: resume, photo, supplements, backgroundId: pack.background_id });
     $('#upload-status').textContent = 'Materials uploaded successfully.';
     setChestOpen(false);
-    chest.focus();
+    if (window.workshop?.active === 'chest') window.workshop.uploaded(pack);
+    else chest.focus();
     $('#readiness').textContent = 'Materials uploaded successfully.';
   } catch (error) {
-    $('#upload-status').textContent = error.message;
+    $('#upload-status').textContent = englishMessage(error.message);
   } finally {
     state.uploading = false;
     button.disabled = false;
@@ -98,5 +110,5 @@ $('#save-profile').addEventListener('click', async () => {
   }
 });
 startButton.addEventListener('click', () => { if (!startButton.disabled) location.hash = 'workspace'; });
-document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && state.open) { setChestOpen(false); chest.focus(); } });
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && state.open && !window.workshop?.active) { setChestOpen(false); chest.focus(); } });
 render();

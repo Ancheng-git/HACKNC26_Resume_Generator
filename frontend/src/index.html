@@ -10,13 +10,60 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="eco-scene.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+  <script type="module" src="eco-scene.js"></script>
   <script src="api.js" defer></script>
   <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="page-shell">
+  <section id="eco-scene" class="eco-scene" aria-labelledby="eco-title">
+    <div id="eco-canvas" class="eco-canvas" role="region" aria-label="A sunlit block island: a resting adventurer under a leafy tree, a glass eco workshop with solar panels, flowers and turquoise water."></div>
+    <header class="eco-header">
+      <a class="eco-brand" href="#scene" aria-label="MineStory home"><span class="eco-mark" aria-hidden="true">▧</span> MineStory<span class="eco-brand-note">THE ECO WORKSHOP</span></a>
+      <details id="scene-options"><summary aria-label="Scene settings and accessible alternatives">☰</summary><div><p>Scene settings</p><button id="eco-quality" type="button" aria-pressed="false">Low graphics mode</button><button id="eco-reduce" type="button" aria-pressed="false">Reduced motion</button><a href="#profile">Form view / Your materials ↗</a><a href="#workspace">Applications ↗</a></div></details>
+    </header>
+    <h1 id="eco-title" class="sr-only">MineStory · The eco workshop</h1>
+    <p id="eco-status" class="eco-status" role="status">Growing your little world…</p>
+    <div id="journey-intro" class="journey-intro">
+      <p>A quiet beginning.</p><button id="journey-start" class="eco-primary" type="button" disabled>Click to start <span aria-hidden="true">→</span></button>
+    </div>
+    <p id="journey-cue" class="journey-cue" role="status" aria-live="polite" hidden></p>
+    <section id="visitor-sign" class="visitor-sign" aria-labelledby="visitor-title" hidden>
+      <span class="sign-pixel" aria-hidden="true">✦</span><small>THE ECO WORKSHOP</small><h2 id="visitor-title">Welcome to the eco workshop</h2><p>Bring your real experience to your next chapter.</p><button id="journey-enter" type="button">Enter as a guest <span aria-hidden="true">→</span></button><span class="visitor-note">No account or password needed</span>
+    </section>
+    <div id="journey-inside" class="journey-inside" hidden><p id="room-prompt" role="status">WASD / arrows to move · Click the ground or an object</p><p id="workshop-live-task" role="status"></p><p id="workshop-notice" role="status"></p></div>
+    <nav id="workshop-objects" class="workshop-objects" aria-label="Workshop objects" hidden>
+      <button type="button" data-workshop="chest"><strong>Materials chest</strong><small>Walk over to upload materials</small></button>
+      <button type="button" data-workshop="table"><strong>Workbench</strong><small>Walk over to prepare an application</small></button>
+      <button type="button" data-workshop="board"><strong>Noticeboard</strong><small>Explore green careers</small></button>
+      <button type="button" data-workshop="furnace"><strong>Furnace</strong><small id="furnace-label">No generation tasks</small></button>
+      <button type="button" data-workshop="anvil"><strong>Anvil</strong><small>View model settings</small></button>
+      <button type="button" data-workshop="door"><strong>Explore island</strong><small>Walk through the doorway</small></button>
+    </nav>
+    <div class="journey-tools">
+      <div id="journey-shortcuts"><button id="journey-skip" type="button" disabled>Skip intro</button><button id="journey-direct" type="button" disabled>Enter workshop directly</button></div>
+      <span id="journey-reduced" hidden>Reduced motion enabled</span>
+      <button id="eco-motion" type="button" aria-pressed="false">Pause ambient motion</button>
+    </div>
+    <noscript><p class="eco-fallback">JavaScript is needed for the scene and application forms.</p></noscript>
+  </section>
+  <dialog id="workshop-dialog" class="workshop-dialog" aria-labelledby="workshop-panel-title">
+    <header class="workshop-panel-header"><div><small>THE ECO WORKSHOP</small><h2 id="workshop-panel-title"></h2></div><button id="workshop-close" type="button" aria-label="Close panel and return to the workshop">Back to workshop ×</button></header>
+    <div id="workshop-panel-body"></div>
+  </dialog>
+  <template id="board-content">
+    <div class="workshop-info"><p>Find directions that connect your existing skills with climate technology and nature conservation.</p><p class="workshop-disclosure">These external career resources open in new tabs. MineStory has no job search or recommendation API integration.</p>
+      <a href="https://climatebase.org/" target="_blank" rel="noopener noreferrer"><strong>Climatebase ↗</strong><span>Jobs, organizations and career communities in climate.</span><small>Opens in a new tab</small></a>
+      <a href="https://www.terra.do/climate-jobs/job-board/" target="_blank" rel="noopener noreferrer"><strong>Terra.do ↗</strong><span>Climate career opportunities, cross-functional roles and learning resources.</span><small>Opens in a new tab</small></a>
+      <a href="https://www.conservationjobboard.com/" target="_blank" rel="noopener noreferrer"><strong>Conservation Job Board ↗</strong><span>Jobs in conservation, ecology, wildlife and the environment.</span><small>Opens in a new tab</small></a>
+      <a href="https://greenjobs.net/" target="_blank" rel="noopener noreferrer"><strong>Green Jobs Network ↗</strong><span>Career resources for green, sustainability, environmental and social impact work.</span><small>Opens in a new tab</small></a>
+    </div>
+  </template>
+  <template id="anvil-content"><div class="workshop-info"><span class="eco-kicker">Not available yet</span><h3>Model settings</h3><p>Model switching is not available. Applications use the backend’s current configuration.</p><p>No API keys are collected. There is no simulated save or model switch.</p></div></template>
+  <div class="page-shell" hidden>
     <header class="topbar">
-      <a class="brand" href="#top" aria-label="MineStory home"><span class="brand-cube" aria-hidden="true">✦</span> MineStory</a>
+      <a class="brand" href="#scene" aria-label="MineStory home"><span class="brand-cube" aria-hidden="true">✦</span> MineStory</a>
       <span class="topbar-note">A new chapter starts here</span>
       <a class="topbar-link" href="#how-it-works">How it works <span aria-hidden="true">↘</span></a>
     </header>
@@ -55,9 +102,9 @@
             <button type="button" id="chest-open-label" class="chest-open-label">Open chest <span aria-hidden="true">↗</span></button>
 
             <section id="inventory" class="inventory" aria-label="Personal file" hidden>
-              <label id="drop-zone" class="drop-zone" for="file-input"><span class="upload-glyph" aria-hidden="true">↑</span><span><strong>Choose your personal file</strong><small id="file-selection" aria-live="polite">Choose one file or drop it here</small></span></label>
-              <input id="file-input" class="sr-only" type="file" accept=".pdf,.docx,.doc">
-              <label class="chest-file-field">Personal photo · Required<input id="photo-input" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png"><small id="photo-selection" aria-live="polite">Choose one photo</small></label>
+              <label id="drop-zone" class="drop-zone" for="file-input"><span class="upload-glyph" aria-hidden="true">↑</span><span><strong>Resume · Required</strong><small id="file-selection" aria-live="polite">Choose one file or drop it here</small></span></label>
+              <input id="file-input" tabindex="-1" class="sr-only" type="file" accept=".pdf,.docx,.doc"><button id="resume-picker" class="file-picker" type="button">Choose resume</button>
+              <label class="chest-file-field">Personal photo · Required<input id="photo-input" tabindex="-1" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png"><button id="photo-picker" class="file-picker" type="button">Choose photo</button><small id="photo-selection" aria-live="polite">Choose one photo</small></label>
               <div id="supplementary-files" class="supplementary-files" aria-label="Optional supporting files"></div>
               <button type="button" id="save-profile" class="save-notes">Save to chest ↗</button>
               <p id="upload-status" role="status"></p>
@@ -89,16 +136,17 @@
   </div>
 
   <section id="workspace" class="workspace" hidden aria-label="Application workspace">
-    <header class="workspace-header"><a class="brand" href="#workspace">✦ MineStory</a><span>Your next chapter, one application at a time.</span><button id="edit-profile" type="button">Your experience chest ↗</button></header>
+    <header class="workspace-header"><a class="brand" href="#scene">✦ MineStory</a><span>Your next chapter, one application at a time.</span><button id="edit-profile" type="button">Your experience chest ↗</button></header>
     <div class="workspace-layout">
-      <aside class="jobs-panel"><div class="panel-heading"><div><small>YOUR JOURNEY</small><h1>Applications</h1></div><button id="new-job" type="button" aria-label="Add application">＋</button></div><p class="muted">One story. Many opportunities.</p><div id="job-list"></div><div class="profile-card"><strong>▣ Your experience chest</strong><p id="profile-summary"></p><small>Materials stay available while this page is open.</small></div></aside>
+      <aside class="jobs-panel"><div class="panel-heading"><div><small>YOUR JOURNEY</small><h1>Applications</h1></div><button id="new-job" type="button" aria-label="Add application" aria-expanded="false" aria-controls="new-job-form">＋</button></div><form id="new-job-form" class="new-job-form" novalidate hidden><label>Application label<input id="new-job-label" required maxlength="120" placeholder="e.g. Climate software"></label><p id="new-job-error" role="alert"></p><div><button type="submit">Create application</button><button id="cancel-new-job" type="button">Cancel</button></div></form><p class="muted">One story. Many opportunities.</p><div id="job-list"></div><div class="profile-card"><strong>▣ Your experience chest</strong><p id="profile-summary"></p><small>Materials stay available while this page is open.</small></div></aside>
       <main class="application-panel">
         <div class="demo-notice">Upload your personal materials once, then generate applications for different opportunities.</div>
-        <form id="job-form" class="job-form" novalidate><small>THE NEXT OPPORTUNITY</small><h2 id="application-title">Where will your story go next?</h2><label>Title<input id="job-title" required maxlength="280" placeholder="e.g. Figma (company / opportunity)"></label><label>Job description<textarea id="job-description" required rows="5" placeholder="Paste the full job description here…"></textarea></label><div class="form-actions"><span>Uses your saved personal file.</span><button class="primary-action" type="submit">Generate application ✦</button></div></form>
+        <form id="job-form" class="job-form" novalidate><small>THE NEXT OPPORTUNITY</small><h2 id="application-title">Where will your story go next?</h2><label>Title<input id="job-title" required maxlength="120" placeholder="e.g. Figma (company / opportunity)"></label><label>Job description<textarea id="job-description" required maxlength="50000" rows="5" placeholder="Paste the full job description here…"></textarea></label><p id="job-error" role="alert"></p><div class="form-actions"><span>Uses your saved personal file.</span><button class="primary-action" type="submit">Generate application ✦</button></div></form>
         <section class="documents-panel" aria-label="Application documents"><div class="document-toolbar"><div class="document-tabs" aria-label="Document type"><button type="button" data-document="resume" aria-pressed="true">Resume</button><button type="button" data-document="ats" aria-pressed="false">ATS resume</button><button type="button" data-document="letter" aria-pressed="false">Cover letter</button></div><span id="document-status" role="status">No application selected</span></div><div id="document-preview" class="document-preview"></div></section>
       </main>
     </div>
   </section>
   <script src="workspace.js" defer></script>
+  <script src="workshop.js" defer></script>
 </body>
 </html>

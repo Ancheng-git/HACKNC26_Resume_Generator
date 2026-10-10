@@ -1194,7 +1194,7 @@ a:focus-visible,
 /* Place the experience chest in the space previously occupied by the sign. */
 @media(min-width:761px){.scene .chest-stage{left:auto;right:12%;top:38%;bottom:auto;width:190px}.scene .chest-stage .chest{height:178px}.scene .chest-stage .inventory{max-height: min(380px,45vh)}}
 
-@media(min-width:761px){.scene .chest-stage .inventory{left:auto;right:calc(100% + 16px);width:min(340px,38vw)}.scene .inventory:before{left:auto;right:-18px;transform:rotate(180deg)}}
+@media(min-width:761px){.scene .chest-stage .inventory{left:auto;right:calc(100% + 16px);top:0;bottom:auto;width:min(340px,38vw)}.scene .inventory:before{left:auto;right:-18px;top:48%;bottom:auto;transform:rotate(180deg)}}
 @media(max-width:760px){.scene .inventory{left:auto;right:auto;top:auto}.scene .inventory:before{left:auto;right:44px}}
 
 .chest-file-field{display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:700;margin:16px 0;color:#e8fff4}.chest-file-field input{max-width:100%;font-size:11px}.chest-file-field small{font-weight:400;overflow-wrap:anywhere}.chest-file-field button{align-self:flex-start;border:1px solid #b7986b;background:#3b3228;color:#e8fff4;border-radius:4px;font-size:11px;padding:4px 10px}.supplementary-files{border-top:1px solid #806946;margin-top:18px}
