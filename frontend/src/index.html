@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#70cced">
+  <meta name="description" content="Mine your experiences. Craft your next chapter with MineStory.">
+  <title>MineStory — Mine your experiences. Craft your next chapter.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="api.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="MineStory home"><span class="brand-cube" aria-hidden="true">✦</span> MineStory</a>
+      <span class="topbar-note">A new chapter starts here</span>
+      <a class="topbar-link" href="#how-it-works">How it works <span aria-hidden="true">↘</span></a>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="world-art" role="img" aria-label="A bright voxel world with a monumental MineStory sculpture, a resting adventurer, flowers and waterfalls"></div>
+        <div class="world-clouds" aria-hidden="true"></div>
+        <div class="world-water" aria-hidden="true"></div>
+        <div class="world-shade"></div>
+        <div class="steve-breathe" aria-hidden="true"></div>
+
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-diamond" aria-hidden="true"></span> YOUR STORY IS WORTH DISCOVERING</div>
+          <h1 id="hero-title">Mine your experiences.<br><em>Craft your next chapter.</em></h1>
+          <p>Uncover what makes your experience valuable. Craft resumes and cover letters grounded in your real story.</p>
+        </div>
+
+        <div class="scene" aria-label="Start your MineStory">
+          <div class="onboarding-heading"><span class="step-glyph" aria-hidden="true">01</span><span>Gather what makes you, you</span></div>
+
+          <div class="chest-stage" id="chest-stage">
+            <div class="chest-intro">
+              <div class="mini-label">YOUR STARTING MATERIALS</div>
+              <h2 id="chest-title">Your experience chest</h2>
+              <p class="chest-blurb">Drop in your resume, projects, and anything worth telling.</p>
+            </div>
+            <button type="button" class="chest" id="chest-toggle" aria-expanded="false" aria-controls="inventory" aria-label="Open your experience chest">
+              <span class="chest-visual">
+                <span class="chest-art chest-art-closed"></span>
+                <span class="chest-art chest-art-open"></span>
+                <span class="chest-lid" aria-hidden="true"><span class="chest-lid-panel"></span></span>
+              </span>
+              <span class="chest-count" id="chest-count" hidden>0</span>
+            </button>
+            <button type="button" id="chest-open-label" class="chest-open-label">Open chest <span aria-hidden="true">↗</span></button>
+
+            <section id="inventory" class="inventory" aria-label="Personal file" hidden>
+              <label id="drop-zone" class="drop-zone" for="file-input"><span class="upload-glyph" aria-hidden="true">↑</span><span><strong>Choose your personal file</strong><small id="file-selection" aria-live="polite">Choose one file or drop it here</small></span></label>
+              <input id="file-input" class="sr-only" type="file" accept=".pdf,.docx,.doc">
+              <label class="chest-file-field">Personal photo · Required<input id="photo-input" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png"><small id="photo-selection" aria-live="polite">Choose one photo</small></label>
+              <div id="supplementary-files" class="supplementary-files" aria-label="Optional supporting files"></div>
+              <button type="button" id="save-profile" class="save-notes">Save to chest ↗</button>
+              <p id="upload-status" role="status"></p>
+              <p id="upload-warnings" role="status"></p>
+            </section>
+          </div>
+
+          <div class="start-zone">
+            <button type="button" id="start-button" class="start-button" disabled>Start crafting <span aria-hidden="true">✦</span></button>
+            <p class="start-support">Turn your experiences into your next opportunity.</p>
+            <p id="readiness" class="readiness" role="status">Add your resume or a document to get started.</p>
+          </div>
+        </div>
+        <div class="hero-bottom"><span>✦ &nbsp; YOUR REAL EXPERIENCE. NO INVENTED ACHIEVEMENTS.</span><span>SCROLL TO EXPLORE &nbsp; ↓</span></div>
+      </section>
+
+      <section class="journey" id="how-it-works" aria-labelledby="journey-title">
+        <div class="journey-heading"><span class="eyebrow">THE PATH AHEAD</span><h2 id="journey-title">Every great story starts somewhere.</h2><p>Follow the path from scattered memories to a next chapter that sounds like you.</p></div>
+        <div class="journey-path" aria-label="How MineStory works">
+          <article class="journey-stop"><div class="stop-illustration stop-chest" aria-hidden="true"><span>▣</span></div><div class="stop-number">01 / THE GATHERING</div><h3>Collect your story</h3><p>Bring together your resume, projects, and personal notes.</p></article>
+          <span class="path-dash" aria-hidden="true">◆ ┄ ◆ ┄ ◆</span>
+          <article class="journey-stop"><div class="stop-illustration stop-pick" aria-hidden="true"><span>✦</span></div><div class="stop-number">02 / THE DISCOVERY</div><h3>Dig deeper</h3><p>Answer thoughtful questions that reveal the details you forgot to mention.</p></article>
+          <span class="path-dash" aria-hidden="true">◆ ┄ ◆ ┄ ◆</span>
+          <article class="journey-stop"><div class="stop-illustration stop-scroll" aria-hidden="true"><span>▤</span></div><div class="stop-number">03 / THE CRAFT</div><h3>Craft your next chapter</h3><p>Create tailored resumes and cover letters backed by your real experience.</p></article>
+        </div>
+        <div class="journey-footer"><span class="brand"><span class="brand-cube" aria-hidden="true">✦</span> MineStory</span><span>Your real experience. No invented achievements.</span></div>
+      </section>
+    </main>
+  </div>
+
+  <section id="workspace" class="workspace" hidden aria-label="Application workspace">
+    <header class="workspace-header"><a class="brand" href="#workspace">✦ MineStory</a><span>Your next chapter, one application at a time.</span><button id="edit-profile" type="button">Your experience chest ↗</button></header>
+    <div class="workspace-layout">
+      <aside class="jobs-panel"><div class="panel-heading"><div><small>YOUR JOURNEY</small><h1>Applications</h1></div><button id="new-job" type="button" aria-label="Add application">＋</button></div><p class="muted">One story. Many opportunities.</p><div id="job-list"></div><div class="profile-card"><strong>▣ Your experience chest</strong><p id="profile-summary"></p><small>Materials stay available while this page is open.</small></div></aside>
+      <main class="application-panel">
+        <div class="demo-notice">Upload your personal materials once, then generate applications for different opportunities.</div>
+        <form id="job-form" class="job-form" novalidate><small>THE NEXT OPPORTUNITY</small><h2 id="application-title">Where will your story go next?</h2><label>Title<input id="job-title" required maxlength="280" placeholder="e.g. Figma (company / opportunity)"></label><label>Job description<textarea id="job-description" required rows="5" placeholder="Paste the full job description here…"></textarea></label><div class="form-actions"><span>Uses your saved personal file.</span><button class="primary-action" type="submit">Generate application ✦</button></div></form>
+        <section class="documents-panel" aria-label="Application documents"><div class="document-toolbar"><div class="document-tabs" aria-label="Document type"><button type="button" data-document="resume" aria-pressed="true">Resume</button><button type="button" data-document="ats" aria-pressed="false">ATS resume</button><button type="button" data-document="letter" aria-pressed="false">Cover letter</button></div><span id="document-status" role="status">No application selected</span></div><div id="document-preview" class="document-preview"></div></section>
+      </main>
+    </div>
+  </section>
+  <script src="workspace.js" defer></script>
+</body>
+</html>
