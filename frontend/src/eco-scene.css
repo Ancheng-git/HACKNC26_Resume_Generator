@@ -1,0 +1,167 @@
+.eco-scene { position: relative; height: 100svh; min-height: 740px; overflow: hidden; color: #174b50; background: linear-gradient(#b9e7f7, #e3f8f6 65%, #a8e2df); }
+.eco-canvas { position: absolute; inset: 0; }
+.eco-canvas canvas { display: block; width: 100%; height: 100%; }
+.eco-header { position: absolute; top: 0; left: 0; width: 100%; padding: 30px 4%; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.eco-brand { display: grid; grid-template-columns: 42px auto; column-gap: 12px; color: #15494d; text-decoration: none; font-weight: 800; font-size: 25px; letter-spacing: -1px; }
+.eco-mark { grid-row: span 2; align-self: center; display: grid; place-items: center; width: 40px; height: 42px; color: #f0ffff; background: linear-gradient(145deg, #77dcc7 5%, #29998e 48%, #137a7e); border: 1px solid #c0ffed; border-radius: 10px; box-shadow: inset 0 2px 2px #e4fff9aa, 0 4px 12px #2e8c8530; font-size: 30px; }
+.eco-brand-note { font-size: 8px; font-weight: 700; letter-spacing: 1.7px; margin-top: 5px; }
+.eco-header nav { display: flex; align-items: center; gap: 26px; }
+.eco-header nav a { color: #235e65; text-decoration: none; font-size: 12px; font-weight: 700; }
+.eco-header nav a span { margin-left: 14px; }
+.eco-header .eco-nav-pill { padding: 12px 20px; border: 1px solid #ffffffbc; border-radius: 30px; background: linear-gradient(#f5ffffa8, #e0f6f366); box-shadow: inset 0 1px white, 0 4px 12px #457b8210; backdrop-filter: blur(12px); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.eco-scene { min-height: 540px; }
+.eco-scene [hidden] { display: none !important; }
+.eco-kicker { font-size: 9px; font-weight: 800; letter-spacing: 2px; }
+.eco-primary { display: flex; align-items: center; justify-content: space-between; gap: 36px; padding: 17px 25px; border: 1px solid #effff6; border-radius: 10px; background: linear-gradient(#61c8a8, #268e78); box-shadow: inset 0 2px 0 #c9ffe599, 0 5px 0 #1b7062, 0 12px 28px #1a786b30; color: white; font-size: 15px; font-weight: 700; cursor: pointer; }
+.eco-primary:hover { filter: brightness(1.08); }
+.eco-scene button:disabled { opacity: .45; cursor: wait; }
+.journey-intro { position: absolute; bottom: 112px; left: 50%; transform: translateX(-50%); text-align: center; }
+.journey-intro p { font-size: 12px; letter-spacing: 2px; margin-bottom: 17px; }
+.journey-cue { position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%); padding: 10px 18px; background: #effff8d9; border: 1px solid #fff; border-radius: 8px; font-size: 12px; white-space: nowrap; }
+.journey-tools { position: absolute; bottom: 25px; left: 4%; right: 4%; display: flex; align-items: center; justify-content: space-between; gap: 15px; font-size: 10px; }
+.journey-tools button { padding: 8px 0; border: 0; border-bottom: 1px solid #4a827f70; background: transparent; color: #245b63; font-size: 11px; cursor: pointer; }
+#journey-shortcuts { display: flex; gap: 23px; }
+#eco-motion { margin-left: auto; }
+.visitor-sign { position: absolute; right: 5%; bottom: 108px; width: 288px; padding: 22px; background: #f0dfb6; border: 4px solid #806b48; box-shadow: 4px 4px 0 #4f5935, inset 0 0 0 2px #fff4d3; text-align: center; font-family: 'Courier New', monospace; }
+.visitor-sign::after { content: ''; position: absolute; width: 15px; height: 43px; background: #806b48; border-right: 4px solid #645338; top: calc(100% + 4px); left: calc(50% - 8px); }
+.sign-pixel { display: block; color: #61885d; font-size: 23px; margin-bottom: 8px; }
+.visitor-sign small { font-size: 9px; font-weight: bold; letter-spacing: 1px; }
+.visitor-sign h2 { font-size: 17px; margin: 15px 0 10px; }
+.visitor-sign p { font-size: 11px; line-height: 1.8; }
+.visitor-sign button { width: 100%; padding: 12px 7px; margin: 12px 0 10px; border: 2px solid #456943; background: #648d59; color: #fffce8; box-shadow: 3px 3px 0 #456943; font: bold 13px 'Courier New', monospace; cursor: pointer; }
+.visitor-sign button:hover { background: #507b4b; }
+.visitor-note { font-size: 10px; color: #696b50; }
+.journey-inside { position: absolute; left: 4%; bottom: 95px; padding: 20px 24px; background: #effff3e8; border: 1px solid #fff; border-radius: 12px; backdrop-filter: blur(10px); }
+.journey-inside h2 { margin: 9px 0; font-size: 25px; font-weight: 500; }
+.journey-inside p { margin: 0 0 17px; font-size: 12px; }
+.journey-inside a { margin-right: 17px; font-size: 12px; color: #245b63; font-weight: 700; }
+.eco-status { position: absolute; top: 49%; left: 50%; transform: translate(-50%, -50%); max-width: min(420px, 90%); padding: 18px 24px; border: 1px solid white; border-radius: 15px; background: #f1fffcf0; text-align: center; font-size: 13px; }
+.eco-scene a:focus-visible, .eco-scene button:focus-visible { outline: 3px solid #176658; outline-offset: 5px; }
+@media (max-width: 760px) {
+  .eco-header { padding: 20px 6%; }
+  .eco-brand { font-size: 20px; grid-template-columns: 34px auto; column-gap: 9px; }
+  .eco-mark { width: 33px; height: 36px; font-size: 25px; }
+  .eco-brand-note { font-size: 6px; letter-spacing: 1px; }
+  .eco-header nav { gap: 0; }
+  .eco-header nav a:first-child { display: none; }
+  .eco-header .eco-nav-pill { padding: 10px 12px; font-size: 10px; }
+  .eco-header nav a span { margin-left: 4px; }
+  .journey-tools { bottom: 18px; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  #journey-shortcuts { width: 100%; justify-content: center; }
+  #eco-motion { margin: 0; }
+  .journey-intro { bottom: 138px; }
+  .journey-cue { bottom: 130px; }
+  .visitor-sign { right: 50%; transform: translateX(50%); bottom: 128px; width: min(288px, 86%); padding: 14px 19px; }
+  .sign-pixel { display: none; }
+  .visitor-sign h2 { margin: 10px 0; }
+  .journey-inside { left: 6%; right: 6%; bottom: 90px; padding: 15px 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .eco-scene *, .eco-scene *::after { scroll-behavior: auto; transition: none; } }
+/* The scene remains behind one accessible, focus-trapped native dialog. */
+.workshop-dialog { width: min(600px, calc(100vw - 32px)); max-height: calc(100svh - 36px); padding: 0; margin: auto; border: 1px solid #def9e7; border-radius: 14px; background: #f2f8f0; color: #234b3a; box-shadow: 0 24px 70px #18392f70; }
+.workshop-dialog.wide { width: min(1160px, calc(100vw - 32px)); }
+.workshop-dialog::backdrop { background: #173a3655; backdrop-filter: blur(3px); }
+.workshop-panel-header { position: sticky; top: 0; z-index: 15; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 18px 24px; background: #e4f2e7; border-bottom: 1px solid #c9dccc; }
+.workshop-panel-header small { font-size: 8px; letter-spacing: 2px; }
+.workshop-panel-header h2 { font-size: 19px; margin: 7px 0 0; }
+.workshop-panel-header button { padding: 10px 14px; background: #fff9; border: 1px solid #abc6b2; border-radius: 7px; color: #28543d; white-space: nowrap; cursor: pointer; }
+.workshop-dialog .inventory { position: static; width: 100%; max-height: none; border: 0; border-radius: 0; box-shadow: none; animation: none; padding: 24px; }
+.workshop-dialog .inventory::before { display: none; }
+.workshop-dialog .workspace { min-height: 0; }
+.workshop-dialog .workspace-header { padding: 14px 22px; min-height: 0; }
+.workshop-dialog .workspace-header .brand, .workshop-dialog .workspace-header>span { display: none; }
+.workshop-dialog .workspace-header { justify-content: flex-end; }
+.workshop-dialog .workspace-layout { min-height: 0; grid-template-columns: 230px minmax(0,1fr); }
+.workshop-dialog .document-preview { min-height: 180px; }
+.workshop-dialog .document-empty { margin: 30px auto; }
+.workshop-dialog .application-panel { padding: 22px; }
+.workshop-info { padding: 24px; font-size: 13px; line-height: 1.8; }
+.workshop-info>p:first-child { margin-top: 0; }
+.workshop-info a, .workshop-info article { display: flex; flex-direction: column; gap: 5px; margin-top: 14px; padding: 16px; border: 1px solid #b9d3bb; border-radius: 9px; background: #fff9; color: #28573c; text-decoration: none; }
+.workshop-info a:hover { background: #dcf2df; }
+.workshop-info a small { font-size: 10px; color: #5e7665; }
+.workshop-info h3, .workshop-info article p { margin: 0; }
+.workshop-disclosure { color: #596d5d; background: #e1ecd9; padding: 13px; border-radius: 7px; }
+.workshop-dialog :focus-visible { outline: 3px solid #37754f; outline-offset: 3px; }
+.workshop-objects { position: absolute; inset: 0; pointer-events: none; }
+.workshop-objects button { position: absolute; transform: translate(-50%, -100%); pointer-events: auto; border: 1px solid #e8fff2; border-radius: 5px; padding: 7px 10px; background: #f4fff0e8; box-shadow: 0 3px 0 #47795077; color: #24523c; cursor: pointer; text-align: center; font-size: 12px; white-space: nowrap; }
+.workshop-objects strong { font-weight: 700; }
+.workshop-objects small { display: none; font-size: 9px; margin-top: 5px; }
+.workshop-objects button:hover, .workshop-objects button:focus-visible, .workshop-objects button.is-hovered { background: #d4f795; }
+.workshop-objects button:hover small, .workshop-objects button:focus-visible small, .workshop-objects button.is-hovered small, [data-workshop=furnace] small { display: block; }
+.workshop-objects [data-workshop=furnace] small { max-width: 180px; white-space: normal; }
+.workshop-objects [data-workshop=furnace][data-lit=true] { background: #fff0af; }
+.journey-inside { bottom: 82px; padding: 13px 18px; }
+.journey-inside h2 { font-size: 19px; }
+.journey-inside p { font-size: 10px; margin: 0; }
+#workshop-notice:empty { display: none; }
+#workshop-notice { margin-top: 8px; max-width: 320px; }
+@media(max-width:760px) {
+  .workshop-objects { inset: auto 4% 145px; display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; }
+  .workshop-objects button { position: static; transform: none; font-size: 11px; padding: 8px 10px; }
+  .workshop-objects small { display: none !important; }
+  .journey-inside { bottom: 70px; padding: 9px 14px; }
+  .journey-inside h2 { font-size: 16px; margin: 5px 0; }
+  .journey-inside p { font-size: 9px; }
+  .workshop-panel-header { padding: 14px; }
+  .workshop-panel-header h2 { font-size: 15px; }
+  .workshop-panel-header button { padding: 8px; font-size: 11px; }
+  .workshop-dialog .workspace-layout { grid-template-columns: 1fr; }
+  .workshop-dialog .jobs-panel { padding: 16px; border-right: 0; border-bottom: 1px solid #d8e3d9; }
+  .workshop-dialog .application-panel { padding: 14px; }
+  .workshop-dialog .inventory { padding: 18px; }
+}
+.workshop-dialog #file-input { position: static; width: 100%; height: auto; clip-path: none; white-space: normal; font-size: 11px; margin-top: 10px; }
+.new-job-form { margin: 12px 0; padding: 12px; border: 1px solid #b9d0bb; border-radius: 8px; background: #fff9; }
+.new-job-form label { font-size: 11px; font-weight: 700; display: flex; flex-direction: column; gap: 8px; }
+.new-job-form input { min-width: 0; width: 100%; padding: 9px; margin-bottom: 9px; border: 1px solid #b9d0bb; border-radius: 5px; }
+.new-job-form div { display: flex; gap: 5px; }
+.new-job-form button { font-size: 11px; padding: 7px !important; }
+#workshop-live-task { display: none; }
+@media(max-width:760px) {
+  .workshop-objects { bottom: 185px; }
+  #workshop-live-task:not(:empty) { display: block; margin-top: 6px; max-height: 30px; overflow: auto; }
+  #workshop-notice { max-height: 32px; overflow: auto; }
+}
+#job-error:empty { display: none; }
+#job-error { font-size: 12px; color: #943c32; line-height: 1.6; }
+
+/* Stage D: the avatar and world lead; utility routes are tucked away. */
+.eco-brand-note, .journey-intro>p { display:none; }
+.eco-header { pointer-events:none; padding:18px 24px; z-index:10; }
+.eco-brand, #scene-options { pointer-events:auto; }
+.eco-brand { font-size:18px; }
+#scene-options { position:relative; font-size:12px; }
+#scene-options summary { cursor:pointer; list-style:none; padding:12px 16px; background:#edfff0dd; border:1px solid white; border-radius:8px; }
+#scene-options>div { position:absolute; right:0; width:210px; background:#f4fff3; padding:14px; border-radius:8px; box-shadow:0 4px 30px #214a3b35; }
+#scene-options a { display:block; margin:12px 0; color:#24573f; }
+.eco-canvas canvas:focus-visible { outline:3px solid #477950; outline-offset:-4px; }
+.journey-inside { left:50%; transform:translateX(-50%); bottom:65px; padding:10px 16px; max-width:calc(100% - 28px); width:max-content; text-align:center; pointer-events:none; }
+.journey-inside p { font-size:12px; }
+.workshop-objects button { max-width:190px; }
+.workshop-dialog { overflow:auto; }
+.workshop-dialog input, .workshop-dialog textarea { max-width:100%; }
+@media(max-width:760px) {
+  .eco-header { padding:12px 16px; }
+  .workshop-objects { bottom:110px; gap:7px; }
+  .workshop-objects button { min-height:44px; }
+  .journey-inside { bottom:58px; padding:8px 10px; }
+  .journey-inside p { font-size:10px; }
+  .journey-tools { left:16px; right:16px; }
+}
+
+#scene-options button { display:block; margin:12px 0; padding:8px; border:1px solid #a6c7b0; border-radius:5px; background:#eaffee; color:#24573f; cursor:pointer; }
+#scene-options button[aria-pressed=true] { background:#cdeba6; }
+
+#journey-start { white-space:nowrap; }
+
+/* English file controls avoid browser-localized labels while retaining native file dialogs. */
+#file-input, #photo-input, .chest-file-field input[type=file], .workshop-dialog #file-input { position:absolute; width:1px; height:1px; padding:0; margin:0; clip-path:inset(50%); overflow:hidden; }
+.file-picker { display:block; width:max-content; margin:10px 0; padding:9px 13px; border:1px solid #b7986b; border-radius:5px; color:#e8fff4; background:#3b3228; cursor:pointer; }
+#new-job-error:empty { display:none; }
+#new-job-error { font-size:12px; color:#943c32; }
+@media(max-width:760px) {
+ .workshop-objects { gap:6px; }
+ .workshop-objects button { font-size:10px; padding:8px; }
+}
