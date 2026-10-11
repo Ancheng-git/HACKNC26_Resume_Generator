@@ -21,7 +21,9 @@ export function sampleRoute(route, distance) {
   }
 }
 
-const durations = { waking: 1.05, standing: 1.35, walking: routeLength(outdoorRoute) / 1.25, entering: 3.1 };
+// The opening walk moves at a brisk 1.9 units/s (about 2.75 s for the whole path).
+export const introWalkSpeed = 1.9;
+const durations = { waking: 1.05, standing: 1.35, walking: routeLength(outdoorRoute) / introWalkSpeed, entering: 3.1 };
 const next = { waking: 'standing', standing: 'walking', walking: 'door', entering: 'inside' };
 
 export class Journey {
@@ -66,7 +68,7 @@ export class Journey {
   }
   get pose() {
     if (['resting', 'waking', 'standing'].includes(this.phase)) return { position: outdoorRoute[0], heading: 0.28 };
-    if (this.phase === 'walking') return sampleRoute(outdoorRoute, this.time * 1.25);
+    if (this.phase === 'walking') return sampleRoute(outdoorRoute, this.time * introWalkSpeed);
     if (this.phase === 'door') return sampleRoute(indoorRoute, 0);
     // Wait for the door to open before crossing its plane.
     const t = this.phase === 'inside' ? 1 : Math.max(0, (this.time - 0.65) / 2.45);
