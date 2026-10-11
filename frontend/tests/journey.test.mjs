@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { IslandNavigation } from '../src/room-navigation.js';
-import { Journey, outdoorRoute, indoorRoute, routeLength, sampleRoute } from '../src/journey.js';
+import { Journey, outdoorRoute, indoorRoute, routeLength, sampleRoute, introWalkSpeed } from '../src/journey.js';
 
 const journey = new Journey();
 assert.equal(journey.enter(), false);
@@ -41,6 +41,6 @@ assert.deepEqual(sampleRoute(outdoorRoute, routeLength(outdoorRoute) + 100).posi
 assert.deepEqual(sampleRoute(indoorRoute, -1).position, indoorRoute[0]);
 console.log('Passed: ordered journey, route bounds, door clearance, duplicate guards, skip/direct entry and reduced motion.');
 
-assert.ok(routeLength(outdoorRoute) / 1.25 >= 3 && routeLength(outdoorRoute) / 1.25 <= 5, 'Shorter route preserves the 1.25 units/s walk speed');
+assert.ok(routeLength(outdoorRoute) / introWalkSpeed >= 2.5 && routeLength(outdoorRoute) / introWalkSpeed <= 3, 'The opening walk is brisk: under 3 s');
 const terrain = new IslandNavigation();
 for (let i = 1; i < outdoorRoute.length; i++) assert.ok(terrain.segment([outdoorRoute[i-1][0], outdoorRoute[i-1][2]], [outdoorRoute[i][0], outdoorRoute[i][2]]), 'Intro clears walls, trees and water');
