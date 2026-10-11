@@ -57,14 +57,14 @@
 }
 @media (prefers-reduced-motion: reduce) { .eco-scene *, .eco-scene *::after { scroll-behavior: auto; transition: none; } }
 /* The scene remains behind one accessible, focus-trapped native dialog. */
-.workshop-dialog { width: min(600px, calc(100vw - 32px)); max-height: calc(100svh - 36px); padding: 0; margin: auto; border: 1px solid #def9e7; border-radius: 14px; background: #f2f8f0; color: #234b3a; box-shadow: 0 24px 70px #18392f70; }
+.workshop-dialog { width: min(600px, calc(100vw - 32px)); max-height: calc(100svh - 36px); padding: 0; margin: auto; border: 4px solid #39372e; border-radius: 0; background: #d8d1bd; color: #302f27; font-family: 'Courier New', monospace; box-shadow: inset 3px 3px #fff5db, inset -3px -3px #938b77, 6px 6px 0 #1d241bbb; }
 .workshop-dialog.wide { width: min(1160px, calc(100vw - 32px)); }
-.workshop-dialog::backdrop { background: #173a3655; backdrop-filter: blur(3px); }
-.workshop-panel-header { position: sticky; top: 0; z-index: 15; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 18px 24px; background: #e4f2e7; border-bottom: 1px solid #c9dccc; }
+.workshop-dialog::backdrop { background: #17251bbb; }
+.workshop-panel-header { position: sticky; top: 0; z-index: 15; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 18px 24px; background: #725539; color: #fff3cf; border-bottom: 4px solid #39372e; box-shadow: inset 3px 3px #aa8454, inset -3px -3px #4e3c2a; }
 .workshop-panel-header small { font-size: 8px; letter-spacing: 2px; }
-.workshop-panel-header h2 { font-size: 19px; margin: 7px 0 0; }
-.workshop-panel-header button { padding: 10px 14px; background: #fff9; border: 1px solid #abc6b2; border-radius: 7px; color: #28543d; white-space: nowrap; cursor: pointer; }
-.workshop-dialog .inventory { position: static; width: 100%; max-height: none; border: 0; border-radius: 0; box-shadow: none; animation: none; padding: 24px; }
+.workshop-panel-header h2 { font-family: 'Press Start 2P', monospace; font-size: 12px; line-height: 1.8; margin: 7px 0 0; text-shadow: 2px 2px #382a1c; }
+.workshop-panel-header button { padding: 10px 14px; white-space: nowrap; cursor: pointer; }
+.workshop-dialog .inventory { position: static; width: 100%; max-height: none; border: 0; border-radius: 0; background: transparent; color: inherit; box-shadow: none; animation: none; padding: 24px; }
 .workshop-dialog .inventory::before { display: none; }
 .workshop-dialog .workspace { min-height: 0; }
 .workshop-dialog .workspace-header { padding: 14px 22px; min-height: 0; }
@@ -76,7 +76,7 @@
 .workshop-dialog .application-panel { padding: 22px; }
 .workshop-info { padding: 24px; font-size: 13px; line-height: 1.8; }
 .workshop-info>p:first-child { margin-top: 0; }
-.workshop-info a, .workshop-info article { display: flex; flex-direction: column; gap: 5px; margin-top: 14px; padding: 16px; border: 1px solid #b9d3bb; border-radius: 9px; background: #fff9; color: #28573c; text-decoration: none; }
+.workshop-info a, .workshop-info article { display: flex; flex-direction: column; gap: 5px; margin-top: 14px; padding: 16px; border: 2px solid #938b77; border-radius: 0; background: #f4efd9; color: #302f27; box-shadow: inset 2px 2px #fffaf0, inset -2px -2px #c3bba4; text-decoration: none; }
 .workshop-info a:hover { background: #dcf2df; }
 .workshop-info a small { font-size: 10px; color: #5e7665; }
 .workshop-info h3, .workshop-info article p { margin: 0; }
@@ -112,7 +112,7 @@
   .journey-inside h2 { font-size: 16px; margin: 5px 0; }
   .journey-inside p { font-size: 9px; }
   .workshop-panel-header { padding: 14px; }
-  .workshop-panel-header h2 { font-size: 15px; }
+  .workshop-panel-header h2 { font-size: 10px; }
   .workshop-panel-header button { padding: 8px; font-size: 11px; }
   .workshop-dialog .workspace-layout { grid-template-columns: 1fr; }
   .workshop-dialog .jobs-panel { padding: 16px; border-right: 0; border-bottom: 1px solid #d8e3d9; }
@@ -151,8 +151,8 @@
 .eco-brand, #scene-options { pointer-events:auto; }
 .eco-brand { font-size:clamp(16px, 2vw, 24px); }
 #scene-options { position:relative; font-size:12px; }
-#scene-options summary { cursor:pointer; list-style:none; padding:12px 16px; background:#edfff0dd; border:1px solid white; border-radius:8px; }
-#scene-options>div { position:absolute; right:0; width:210px; background:#f4fff3; padding:14px; border-radius:8px; box-shadow:0 4px 30px #214a3b35; }
+#scene-options summary { cursor:pointer; list-style:none; padding:12px 16px; background:#d8d1bd; border:2px solid #39372e; border-radius:0; box-shadow:inset 2px 2px #fff5db, inset -2px -2px #938b77; }
+#scene-options>div { position:absolute; right:0; width:210px; background:#d8d1bd; color:#302f27; padding:14px; border:3px solid #39372e; border-radius:0; font-family:'Courier New', monospace; box-shadow:inset 2px 2px #fff5db, inset -2px -2px #938b77, 4px 4px 0 #1d241b80; }
 #scene-options a { display:block; margin:12px 0; color:#24573f; }
 .eco-canvas canvas:focus-visible { outline:3px solid #477950; outline-offset:-4px; }
 .journey-inside { left:50%; transform:translateX(-50%); bottom:65px; padding:10px 16px; max-width:calc(100% - 28px); width:max-content; text-align:center; pointer-events:none; }
@@ -169,7 +169,7 @@
   .journey-tools { left:16px; right:16px; }
 }
 
-#scene-options button { display:block; margin:12px 0; padding:8px; border:1px solid #a6c7b0; border-radius:5px; background:#eaffee; color:#24573f; cursor:pointer; }
+#scene-options button { display:block; margin:12px 0; padding:8px; border:2px solid #39372e; border-radius:0; background:#e7e0c9; color:#302f27; box-shadow:inset 2px 2px #fffaf0, inset -2px -2px #aaa18a; cursor:pointer; }
 #scene-options button[aria-pressed=true] { background:#cdeba6; }
 
 #journey-start { white-space:nowrap; }
@@ -198,3 +198,49 @@
 #noticeboard-detail button { margin: 8px 8px 0 0; }
 .noticeboard-description { white-space: pre-wrap; overflow-wrap: anywhere; }
 #job-source { color: #5d776b; font-size: 12px; }
+
+/* Pixel frames apply to the existing panels without changing their contents. */
+.workshop-dialog :is(button, input, textarea, select) { font-family: inherit; }
+.workshop-dialog :is(button, input, textarea, select, .job-form, .demo-notice, .document-preview, .new-job-form, .drop-zone, .item, .upload-glyph, .generation-feedback, .workshop-disclosure) { border-radius: 0; }
+.workshop-dialog button { border: 2px solid #39372e; background: #e7e0c9; color: #302f27; box-shadow: inset 2px 2px #fffaf0, inset -2px -2px #aaa18a, 2px 2px 0 #938b77; }
+.workshop-dialog button:not(:disabled):hover { background: #f8efd2; }
+.workshop-dialog button:not(:disabled):active { box-shadow: inset 2px 2px #938b77, inset -2px -2px #fff5db; }
+.workshop-dialog :is(input:not([type=file]), textarea, select) { border: 2px solid #77705e; background: #fffaf0; color: #302f27; box-shadow: inset 2px 2px #ded5bc; }
+.workshop-dialog :is(.workspace, .workspace-header, .application-panel) { background: transparent; color: inherit; }
+.workshop-dialog .workspace-header { border-bottom: 2px solid #aaa18a; }
+.workshop-dialog .jobs-panel { background: #c8c0aa; border-color: #938b77; }
+.workshop-dialog :is(.job-form, .new-job-form, .document-preview) { border: 2px solid #938b77; background: #ece5cf; box-shadow: inset 2px 2px #fffaf0, inset -2px -2px #c3bba4; }
+.workshop-dialog :is(.panel-heading h1, .job-form h2, .documents-panel h2, .inventory h3, .workshop-info h3) { font-family: 'Press Start 2P', monospace; font-size: 12px; line-height: 1.8; color: #39372e; }
+.workshop-dialog .panel-heading h1 { font-size: 10px; }
+.workshop-dialog :is(.job-card.selected, .document-tabs button[aria-pressed=true]) { border-color: #3f5c35; background: #c3d49e; color: #283a24; box-shadow: inset 2px 2px #e4efc9, inset -2px -2px #899d66; }
+.workshop-dialog :is(.primary-action, .save-notes) { border-color: #354c2c; background: #557a44; color: #fff8df; box-shadow: inset 2px 2px #90af6e, inset -2px -2px #354c2c, 2px 2px 0 #39372e; }
+.workshop-dialog :is(.primary-action, .save-notes):not(:disabled):hover { background: #668d51; }
+.workshop-dialog .primary-action:disabled { background: #a2aaa5; border-color: #777b70; color: #fff; box-shadow: none; }
+.workshop-dialog .demo-notice { border: 2px solid #b6a46e; background: #f6e9b8; color: #605126; }
+.workshop-dialog .drop-zone { border-color: #938b77; background: #ece5cf; color: #302f27; box-shadow: inset 2px 2px #aaa18a, inset -2px -2px #fff5db; }
+.workshop-dialog .drop-zone.drag-over { border-color: #557a44; background: #d6e6b8; }
+.workshop-dialog .upload-glyph { border-color: #557a44; background: #c3d49e; color: #354c2c; }
+.workshop-dialog .chest-file-field { color: inherit; }
+.workshop-dialog :is(.mini-label, .notes-label, .notes-status, .drop-zone small, .muted, .document-empty, .job-card small, .panel-heading small, .job-form>small, .form-actions) { color: #5b5748; }
+.workshop-dialog .form-error { color: #943c32; }
+.workshop-dialog .workshop-disclosure { color: #5b5748; background: #c8c0aa; }
+.workshop-dialog .generation-feedback { border: 2px solid #b6a46e; background: #fff0cb; }
+.workshop-dialog #noticeboard-results article { border-color: #aaa18a; }
+.workshop-dialog #noticeboard-detail { border-color: #938b77; }
+.workshop-dialog :focus-visible { outline-color: #3f5c35; }
+.visitor-sign h2 { font-family: 'Press Start 2P', monospace; font-size: 11px; line-height: 1.8; }
+@media(max-width:760px) {
+  .workshop-panel-header { gap: 10px; }
+  .workshop-panel-header button { white-space: normal; flex-shrink: 0; max-width: 105px; }
+}
+
+/* Keep pointer, text-editing and scene hover cues with local pixel cursors. */
+:root {
+  --pixel-arrow: url('assets/cursors/arrow.svg') 2 2, auto;
+  --pixel-pointer: url('assets/cursors/hand.svg') 10 2, pointer;
+  --pixel-text: url('assets/cursors/text.svg') 12 12, text;
+}
+body, .eco-canvas canvas { cursor: var(--pixel-arrow); }
+:is(button, a[href], summary, .drop-zone, .file-picker, input[type=checkbox]):not(:disabled), #scene-options :is(button, summary, a[href]):not(:disabled) { cursor: var(--pixel-pointer); }
+.eco-canvas canvas[style*="cursor: pointer"] { cursor: var(--pixel-pointer) !important; }
+:is(input:not([type]), input[type=text], input[type=search], textarea) { cursor: var(--pixel-text); }

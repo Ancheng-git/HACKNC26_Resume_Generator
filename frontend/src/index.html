@@ -14,6 +14,7 @@
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
   <script type="module" src="eco-scene.js"></script>
   <script type="module" src="scene-audio.js"></script>
+  <script type="module" src="scene-recorder.js"></script>
   <script src="api.js" defer></script>
   <script src="script.js" defer></script>
 </head>
@@ -22,7 +23,7 @@
     <div id="eco-canvas" class="eco-canvas" role="region" aria-label="A sunlit block island: a resting adventurer under a leafy tree, a glass eco workshop with solar panels, flowers and turquoise water."></div>
     <header class="eco-header">
       <a class="eco-brand" href="#scene" aria-label="MineJob home">MineJob</a>
-      <details id="scene-options"><summary aria-label="Scene settings and accessible alternatives">☰</summary><div><p>Scene settings</p><button id="eco-quality" type="button" aria-pressed="false">Low graphics mode</button><button id="eco-reduce" type="button" aria-pressed="false">Reduced motion</button><button id="eco-range" type="button">View range: Normal</button><button id="eco-shot" type="button">Take screenshot</button><button id="eco-audio" type="button" aria-pressed="true">Sound: On</button><a href="#profile">Form view / Your materials ↗</a><a href="#workspace">Applications ↗</a></div></details>
+      <details id="scene-options"><summary aria-label="Scene settings and accessible alternatives">☰</summary><div><p>Scene settings</p><button id="eco-quality" type="button" aria-pressed="false">Low graphics mode</button><button id="eco-reduce" type="button" aria-pressed="false">Reduced motion</button><button id="eco-range" type="button">View range: Normal</button><button id="eco-shot" type="button">Take screenshot</button><button id="eco-record" type="button" aria-pressed="false" aria-describedby="eco-record-status">Start recording</button><p id="eco-record-status" class="visitor-note" role="status">Choose This Tab to record this page. Share tab audio to include sound.</p><button id="eco-audio" type="button" aria-pressed="true">Sound: On</button><a href="#profile">Form view / Your materials ↗</a><a href="#workspace">Applications ↗</a></div></details>
     </header>
     <h1 id="eco-title" class="sr-only">MineJob · The eco workshop</h1>
     <p id="eco-status" class="eco-status" role="status">Growing your little world…</p>
