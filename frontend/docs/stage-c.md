@@ -1,53 +1,45 @@
-# MineStory · 阶段 C 绿色职业工坊
+# MineJob · Stage C career workshop
 
-日期：2026-10-10。沿用 `codex/minestory-stage-a`，保留 A/B。没有修改后端或 API 契约，没有推送、合并或发布。
+Date: 2026-10-10. Historical branch: `codex/minestory-stage-a`; Stages A/B were preserved. No backend/API changes, push, merge or deployment occurred at that stage.
 
-## 实现
+## Implemented at this stage
 
-- 资料箱、工作台、公告板、熔炉、铁砧为真实 Three.js 方块模型；射线检测支持模型点击，悬停/键盘焦点同时高亮模型和名称标签。手机使用紧凑的五个物体入口；模型本身仍可点击。
-- 原上传表单与申请工作台直接移入同一个原生 dialog，关闭后移回原位置。没有复制表单、重建应用状态或跳回旧首页。原导航保留为独立页面和 WebGL 降级入口。
-- 资料箱保留主简历、必选照片、五个可选补充文件、真实 multipart 接口与验证、错误和警告。成功后关闭面板和箱盖、返回资料箱焦点，并保留上传警告；失败保持打开且可修正。关闭后选择状态仍在。
-- 工作台保留首次 default、独立草稿和三个下载类型。新建标签改为面板内命名表单，避免内置浏览器原生 prompt 不可操作。
-- 公告板链接至 Climatebase、Terra.do、Conservation Job Board 和 Green Jobs Network；均标注新标签页，使用 target=_blank 与 noopener noreferrer。没有搜索或推荐 API。
-- 熔炉读取所有项目的真实任务状态，切换所选项目不改变炉火。queued/running 点亮，完成、失败或查询不可用时熄灭；准备、生成、验证分别使用后端 stage。查询不可用明确显示未知，不假设任务停止，也不假装仍在生成。任务轮询独立于面板开关，重复重试不会并行查询同一任务。无进度百分比。
-- 铁砧仅说明模型设置尚未开放，不收集 Key，不模拟保存。
-- 原生 dialog 提供焦点约束，Esc/关闭按钮返回室内和原物体焦点；面板打开时场景角色控制暂停，关闭恢复。尚未实现自由移动。
+- Chest, workbench, noticeboard, furnace and anvil as Three.js models. Ray picking opens them, with synchronized hover/focus highlights and compact mobile shortcuts.
+- Existing upload/workbench form nodes move into one native dialog and return afterward; state and listeners are preserved without duplicate forms.
+- Chest retains resume, required photo, five supporting slots, multipart validation, errors and warnings. Success closes the panel/lid and restores focus; errors leave it editable. Selections survive closing.
+- Workbench retains the initial default application, independent drafts and three download types. New labels use an inline form instead of a browser prompt.
+- Noticeboard links to Climatebase, Terra.do, Conservation Job Board and Green Jobs Network, labelled as new tabs with noopener/noreferrer. No search API existed yet.
+- Furnace follows all real task states. Queued/running lights it; completed/failed/unavailable status extinguishes it. Preparation/generation/validation use actual stages. Unknown status stays explicit; polling survives dialogs and application switching, with duplicate query guards and no progress percentages.
+- Anvil only described unavailable model settings, without collecting keys or pretending to save.
+- Native dialog focus handling and Esc/close return to the object. Scene controls pause while panels are open. Free movement was not implemented yet.
 
-## 实际浏览器检查
+## Browser checks
 
-Windows Codex 内置浏览器：桌面布局检查包含 1366×768、1639×922 CSS 视口，手机布局 390×843。手机是尺寸模拟，不是真机。
+Windows Codex in-app browser, desktop 1366×768 and 1639×922, simulated mobile 390×843. All five models and shortcuts opened their panels. Upload validation, editable failures, open lid and Esc focus restoration were checked. Production preview did not upload personal files or call AI.
 
-五个模型均通过画面中的实际坐标点击打开对应面板；名称入口也通过鼠标与键盘操作。检查上传缺失文件的验证错误、失败后面板与箱盖保持打开、Esc 后焦点回资料箱。原生产配置预览没有上传个人文件或调用 AI 生成。
+Workbench drafts survived reopening, with one initial default. Four external links and new-tab labels were checked; handing links off did not prove external pages loaded. Anvil had no input/save action. Mobile panels, scrolling, new labels and close controls had no horizontal overflow.
 
-申请工作台关闭重开保留草稿，首次只有 default。公告板四个链接目标和新标签标注检查通过；点击外链不会替换当前场景，内置浏览器外链交接不作为外部站点加载成功的证据。铁砧没有输入框或保存动作。手机物体入口、上传表单滚动、工作台、新建标签和关闭均检查；无横向溢出。
+## Explicit simulation
 
-## 明确模拟的检查
+`tests/mock-preview.mjs` served a separate SIMULATED BACKEND on port 5175, using non-personal DOC/PNG fixtures. It changed the API address only in served copies; production remained at port 8000.
 
-`tests/mock-preview.mjs` 在 5175 提供独立 QA 服务，页面标注 SIMULATED BACKEND。只使用无个人信息的测试 DOC 与 1×1 PNG，不解析文档，不生成 AI 材料。该服务只在响应副本中替换 API 地址，源代码与正式 5173 预览仍调用 `http://127.0.0.1:8000`。
+Simulated browser checks covered upload success, retained warnings, furnace states while dialogs closed or projects changed, readable failures, independent drafts and three corresponding download links. One explicitly simulated file was downloaded. Automated tests additionally covered validation stage, unknown status and duplicate polling. These checks did not prove actual document parsing, AI quality or a working generation environment.
 
-浏览器模拟验证：上传成功关箱并保留警告；排队/准备/生成时关面板与新建项目不熄炉；完成/失败后熄炉；失败信息可读；第二项目独立草稿保留；三个文件标签给出各自对应链接，并实际下载一个明确标为 SIMULATED 的测试文件。验证阶段、状态未知与重复轮询保护另通过自动回归测试覆盖。
+## Regression
 
-这些检查不能证明真实 PDF/DOC 解析、实际 AI 输出质量或后端生成环境正常。本轮未进行真实后端端到端联调。
+Workspace tests passed for the original contract, warnings, downloads, form relocation/restoration, focus, success/failure panel behavior, cross-application polling and stage mapping. Journey tests passed for ordering, routes, duplicate guards and reduced motion. Build and whitespace checks passed.
 
-## 回归与构建
+## Screenshots
 
-- `node tests/workspace.test.mjs` 通过：原上传契约/限制、警告、三个下载地址，新增面板移动/恢复、上传成功关闭与失败保持、焦点返回、跨项目/关面板保持任务、stage 映射、后台轮询与重复查询保护。请求均为测试桩。
-- `node tests/journey.test.mjs` 通过：A/B 连续动画、重复点击、路线、开门等待、跳过/直接进入及 reduced-motion。
-- `npm run build`、`git diff --check` 通过。
+![Interactive workshop](screenshots/stage-c-workshop.jpg)
+![Application workbench](screenshots/stage-c-applications.jpg)
+![Career noticeboard](screenshots/stage-c-board.jpg)
+![Mobile workshop](screenshots/stage-c-mobile.jpg)
+![Mobile upload](screenshots/stage-c-upload.jpg)
 
-## 画面
+These task screenshots are simulated, not evidence of real generation:
 
-![可点击工坊](screenshots/stage-c-workshop.jpg)
-![申请工作台](screenshots/stage-c-applications.jpg)
-![职业公告板](screenshots/stage-c-board.jpg)
-![手机工坊](screenshots/stage-c-mobile.jpg)
-![手机上传面板](screenshots/stage-c-upload.jpg)
+![Simulated queued furnace](screenshots/stage-c-furnace-simulated.jpg)
+![Simulated failure](screenshots/stage-c-failure-simulated.jpg)
 
-以下为模拟任务画面，不能当作真实生成证据：
-
-![模拟排队任务点亮熔炉](screenshots/stage-c-furnace-simulated.jpg)
-![模拟失败](screenshots/stage-c-failure-simulated.jpg)
-
-## 后续
-
-自由移动、碰撞、账号/历史持久化、模型切换和岗位 API 尚未实现。页面重载仍清空内存里的资料 ID 和草稿。真实后端上传、完整任务生命周期和真实三份 DOCX 下载仍需联调；透明材质与几何合批优化延续阶段 A 的待办。
+Movement, collision, accounts/persistence, model switching and job search were still pending at this stage. Reload cleared material IDs/drafts; real upload, task lifecycle and three DOCX downloads still required integration.

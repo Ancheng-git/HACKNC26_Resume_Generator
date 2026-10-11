@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import tempfile
 import unittest
@@ -54,6 +55,31 @@ class UploadTests(unittest.IsolatedAsyncioTestCase):
         files.extend(extras or [])
         if with_photo: files.append(('photo',('photo.png',photo())))
         return await self.client.post('/api/backgrounds',files=files)
+
+    async def test_generation_denied_command_does_not_publish_files(self):
+        response = await self.upload()
+        pack = response.json()
+
+        async def fake_process(args, directory, label, input_text=None):
+            payload = ({'loggedIn': True} if label == 'auth' else
+                       {'subtype': 'success', 'is_error': False,
+                        'permission_denials': [{'tool_name': 'Bash'}]})
+            (directory / (label + '.stdout.log')).write_text(json.dumps(payload))
+            return 0
+
+        with patch.object(self.runner, '_process', side_effect=fake_process):
+            response = await self.client.post('/api/generations', json={
+                'company': 'Test', 'job_description': 'Python analyst',
+                'background_id': pack['background_id']})
+            self.assertEqual(response.status_code, 202)
+            ident = response.json()['id']
+            await self.runner.active
+        status = (await self.client.get('/api/generations/' + ident)).json()
+        self.assertEqual(status['status'], 'failed')
+        self.assertIn('rejected by permission rules', status['error'])
+        self.assertNotIn('files', status)
+        download = await self.client.get('/api/generations/' + ident + '/files/ats_resume')
+        self.assertEqual(download.status_code, 409)
 
     async def test_docx_upload_headers_tables_originals(self):
         r=await self.upload(extras=[('background_files',('more.docx',word('Extra project: 99 customers')))])
@@ -123,10 +149,18 @@ class UploadTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('Alice',snapshots[0]); self.assertNotIn('Bob',snapshots[0])
         self.assertIn('Bob',snapshots[1]); self.assertNotIn('Alice',snapshots[1])
         self.assertNotIn('Ancheng',snapshots[0]+snapshots[1])
+        legacy_root = self.base/'legacy-root'
+        for name in ('scripts', '.claude'):
+            shutil.copytree(ROOT/name, legacy_root/name)
+        legacy_reference = legacy_root/'reference'
+        legacy_reference.mkdir()
+        (legacy_reference/'core-resume.docx').write_bytes(word('Synthetic legacy reference'))
+        (legacy_reference/'photo.jpg').write_bytes(photo())
         old={'id':'legacy'}
-        directory,*_=self.runner._prepare(old,'test','JD')
-        self.assertEqual((directory/'reference/core-resume.docx').read_bytes(),(ROOT/'reference/core-resume.docx').read_bytes())
-        self.assertEqual((directory/'reference/photo.jpg').read_bytes(),(ROOT/'reference/photo.jpg').read_bytes())
+        with patch.object(self.runner, 'root', legacy_root):
+            directory,*_=self.runner._prepare(old,'test','JD')
+        self.assertEqual((directory/'reference/core-resume.docx').read_bytes(),(legacy_reference/'core-resume.docx').read_bytes())
+        self.assertEqual((directory/'reference/photo.jpg').read_bytes(),(legacy_reference/'photo.jpg').read_bytes())
 
     async def test_invalid_format_empty_corruption_and_cleanup(self):
         for content,name,expected in [(b'bad','x.exe',415),(b'','x.docx',422),(b'bad','x.docx',422),(b'bad','x.pdf',422),(b'bad','x.doc',422),(word(),'x.pdf',422)]:
@@ -167,7 +201,7 @@ class UploadTests(unittest.IsolatedAsyncioTestCase):
     async def test_converter_failure_and_timeout(self):
         ole=b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'+b'test'
         with patch('backend.backgrounds.subprocess.run',side_effect=subprocess.TimeoutExpired('soffice',60)):
-            r=await self.upload(ole,'resume.doc'); self.assertEqual(r.status_code,422); self.assertIn('超时',r.text)
+            r=await self.upload(ole,'resume.doc'); self.assertEqual(r.status_code,422); self.assertIn('timed out',r.text)
         with patch('backend.backgrounds.subprocess.run',return_value=subprocess.CompletedProcess([],1)):
             r=await self.upload(ole,'resume.doc'); self.assertEqual(r.status_code,422)
         self.assertEqual(list(self.store.root.iterdir()),[])
@@ -188,6 +222,7 @@ sys.stdin.read()
 name=Document('reference/core-resume.docx').paragraphs[0].text
 sys.path.insert(0,str(Path('scripts').resolve()))
 from build_professional import build as resume_build
+from build_ats_resume import build as ats_build
 from build_cover_letter_professional import build as letter_build
 from check_pages import renderer
 c={'name':name,'contact':['fixture@example.test'],'education':[{'degree':'Synthetic degree','school':'Fixture University'}],
@@ -195,9 +230,8 @@ c={'name':name,'contact':['fixture@example.test'],'education':[{'degree':'Synthe
 'experience':[{'company':'Fixture Company','title':'Analyst','dates':'2021-2024','bullets':['Completed 42 projects.']}]}
 date=datetime.now(ZoneInfo('America/New_York')).date().isoformat()
 names={'ats_resume':f'Resume_Test_{date}.docx','professional_resume':f'Professional_Test_{date}.docx','professional_cover_letter':f'Professional_CoverLetter_Test_{date}.docx'}
-d=Document(); d.add_paragraph(name)
-for line in ['Summary','Synthetic analyst with Python experience.','Experience','Completed 42 projects.','Education','Synthetic degree, Fixture University','Skills','Python']: d.add_paragraph(line)
-d.save(Path('output')/names['ats_resume'])
+Path('professional_Test.json').write_text(json.dumps(c))
+ats_build(c,Path('output')/names['ats_resume'])
 resume_build(c,Path('output')/names['professional_resume'])
 letter_build({**c,'date':date,'salutation':'Dear Team,','paragraphs':['This is a synthetic test letter.']},Path('output')/names['professional_cover_letter'])
 Path('keywords_Test.json').write_text(json.dumps({'must_have':['Python'],'nice_to_have':[]}))
@@ -225,6 +259,7 @@ print(json.dumps({'subtype':'success','is_error':False}))
         result=(await self.client.get('/api/generations/'+ident)).json()
         self.assertEqual(result['status'],'succeeded',result)
         self.assertEqual(result['ats']['must_have_pct'],100)
+        self.assertTrue(result['warnings'])  # Short synthetic evidence warns without inventing filler.
         for file in result['files'].values():
             response=await self.client.get(file['url'])
             self.assertEqual(response.status_code,200)

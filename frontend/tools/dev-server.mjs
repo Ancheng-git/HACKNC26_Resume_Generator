@@ -27,6 +27,6 @@ createServer(async (request, response) => {
   response.writeHead(200, { 'Content-Type': `${types[extname(file)] || 'application/octet-stream'}; charset=utf-8`, 'Cache-Control': 'no-cache' });
   createReadStream(file).pipe(response);
 }).listen(port, '127.0.0.1', () => {
-  console.log(`MineStory: http://localhost:${port}`);
+  console.log(`MineJob: http://localhost:${port}`);
   console.log(`Serving ${root}`);
 });

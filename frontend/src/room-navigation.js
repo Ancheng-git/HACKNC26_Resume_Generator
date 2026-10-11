@@ -1,16 +1,17 @@
 // World-space footprints of the authored cabin. Character radius includes shoulders.
 export const roomBounds = { minX: -0.21, maxX: 6.51, minZ: -3.52, maxZ: 1.92 };
 export const roomObstacles = [
-  { minX: 0.078, maxX: 1.486, minZ: -0.768, maxZ: 0.288 }, // chest
-  { minX: 1.91, maxX: 3.166, minZ: -0.224, maxZ: 0.544 }, // anvil and horn
+  { minX: -0.05, maxX: 1.086, minZ: -0.8, maxZ: 0.608 }, // chest, lengthwise against the left wall
+  { minX: 0.982, maxX: 2.05, minZ: -3.436, maxZ: -2.836 }, // anvil, between bookshelf and workbench
   { minX: 5.038, maxX: 6.286, minZ: 0.032, maxZ: 1.152 }, // furnace
   { minX: 2.3, maxX: 3.25, minZ: -3.38, maxZ: -2.4 }, // crafting table, against the back wall
   { minX: 5.2, maxX: 6.24, minZ: -3.4, maxZ: -1.36 }, // bed, back-right corner
   { minX: 0.02, maxX: 0.5, minZ: -3.4, maxZ: -0.9 }, // bookshelves along the left wall
+  { minX: 4.318, maxX: 4.862, minZ: -3.264, maxZ: -2.72 }, // floor lamp between workbench and bed
 ];
 // Every gait shares the original walk speed as its base; Shift runs and Ctrl crouches while held.
 export const gaits = { walk: 1.65, run: 2.9, crouch: 0.8 };
-export const interactionPoints = { chest: [0.8, 0.9], table: [3.75, -1.9], board: [3.75, -1.1], furnace: [4.45, 0.55], anvil: [3.8, 0.8] };
+export const interactionPoints = { chest: [2, -0.1], table: [3.75, -1.9], board: [3.75, -1.1], furnace: [4.45, 0.55] };
 // The original hand-built island stays as the playable core of the larger island.
 export const coreTiles = Array.from({ length: 17 * 11 }, (_, i) => [i % 17 - 8, Math.floor(i / 17) - 5])
   .filter(([x, z]) => !(Math.abs(x) === 8 && Math.abs(z) > 2 || Math.abs(x) > 6 && Math.abs(z) === 5));

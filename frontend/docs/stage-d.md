@@ -1,71 +1,55 @@
-# 阶段 D：人物中心的可探索工坊
+# Stage D · Character-centered workshop exploration
 
-日期：2026-10-10。开发分支：`codex/minestory-stage-a`。未推送、未合并，后端与 `src/api.js` 未修改。
+Date: 2026-10-10. Historical branch: `codex/minestory-stage-a`. At this stage, nothing was pushed or merged; the backend and `src/api.js` were unchanged.
 
-## 参考体验与差距
+## Reference and implemented behavior
 
-实际打开 https://bruno-simon.com/ ，点击开场车辆，使用 W、方向键驾驶，观察碰撞箱子的反馈、镜头随车辆平移、靠近地点后的提示，并通过 Enter 打开 Circuit 面板及菜单。没有使用其模型、素材、地图或源码。
+The Bruno Simon site was inspected through its start, driving, collision, following camera, proximity hints and Circuit panel/menu. None of its models, assets, map or source code was reused.
 
-原工坊具备 A/B/C 的场景、开场和业务面板，但人物进入室内后固定，物体直接开面板，没有移动、家具碰撞或接近反馈；镜头对准整栋屋子，家具之间缺乏通道，普通网页导航和说明占据画面。修正聚焦这些行为和空间问题。
+Earlier stages left the indoor character stationary and opened objects immediately. Stage D expanded the cabin, repositioned furniture/plants, preserved the introduction/guest sign, and added:
 
-## 实现
+- Camera-relative WASD/arrows with normalized diagonal speed and shoulder-inclusive character radius. Authored walls/furniture collide; small substeps prevent tunnelling and allow edge sliding.
+- Click-model/shortcut path planning around furniture. Arrival faces the object and opens the existing panel. Mobile supports shortcuts and valid ground clicks. E/Enter interacts nearby; Esc cancels approach.
+- Smooth following camera and cutaway walls/roof/pendant. Labels and models highlight together.
+- Existing form nodes in native dialogs. Panels, blur, route changes and visibility changes clear held movement/routes; closing restores object focus. Drafts/materials/polling remain independent of travel.
+- Distance-driven gait and smooth chest lid animation; reflective/transmissive glass and gentle water motion.
+- Upper-right settings menu for low graphics/reduced motion without reload or lost state. Low mode uses DPR 1, no shadows and simplified transparency. Reduced motion retains active keyboard control while removing automatic travel/ambient animation.
+- `prefers-reduced-motion`, `?motion=reduce`, `?quality=low` and `?view=2d`, plus existing form access after WebGL/context failure.
+- Static ground instancing by material, with interactive models independently picked.
 
-- 小屋水平空间扩大，重新摆放资料箱、铁砧及屋外植物，保留连续开场路径、访客门牌、进入剖面。
-- 室内 WASD / 方向键按镜头方向移动，斜向速度归一化；角色半径包含肩宽。墙体边界、桌子、椅子、箱子、铁砧及其突出部分、熔炉、种植架和盆栽均参与碰撞。小步移动防穿透并允许沿家具边缘滑动。
-- 点击实际模型或名称入口，先规划绕家具的路线，抵达后朝向物体，再打开原来的面板。手机可点击物体入口或有效地面行走。E / Enter 可在附近从场景焦点交互；Esc 可取消途中接近。
-- 镜头平滑跟随人物，室内四面遮挡墙、屋顶及悬挂灯收起；物体名称保留，标签悬停或聚焦时提示并高亮模型。首次用户能直接找到资料箱和工作台。
-- 原生 dialog 保留原表单节点。开关面板、失焦、切换页面和页面可见性变化都会清除移动按键与路线；关闭后焦点返回物体入口。业务数据、草稿与任务轮询不依赖角色移动。
-- 走路按实际距离摆动手脚，箱盖平滑开合；玻璃有环境反射与透射，水面与水光轻微变化，保持方块结构、明亮草地与绿植。
-- 网页导航收至右上角辅助菜单。低性能模式和减少动态效果可直接切换，切换不会刷新页面或丢失业务状态。低性能模式使用 DPR 1、关闭阴影、简化透明材质。减少动态效果保留主动键盘操作，但取消自动接近动画和环境动画。
-- 支持系统 `prefers-reduced-motion`，以及可分享的 `?motion=reduce`、`?quality=low`。`?view=2d` 可明确选择无 3D 的辅助入口；WebGL 初始化失败或上下文丢失时也提供现有上传与申请入口。
-- 静态地面方块按材质合批为 InstancedMesh，交互模型仍独立拾取。
+## Browser verification
 
-## 实际浏览器验收
+Windows Codex in-app browser, with mouse/keyboard and viewport checks; mobile was simulated, not physical touch hardware.
 
-Windows Codex 内置浏览器，使用实际鼠标、键盘及响应式尺寸检查。手机尺寸为浏览器视口检查，不是真机触摸测试。
+The complete start/wake/stand/walk/guest/entry sequence worked. Keyboard movement stopped at furniture/bounds while the camera followed. Five object shortcuts approached before opening; the furnace model was also ray-picked directly. Upload slots remained intact; drafts survived reopening. Typing W in forms did not move the character. Esc restored chest/workbench focus. External noticeboard links, anvil notice and empty furnace state were checked.
 
-- 完整 Click to start → 醒来 → 站起 → 沿路行走 → 门口 → 访客进入 → 室内剖面走通。
-- 实际 W、方向键移动及持续按键，人物沿家具停下，右侧边界位置不超过角色半径允许范围，镜头持续跟随。
-- 五个物体的名称入口均先接近再打开正确面板；另外直接点击画面中熔炉模型验证 Three.js 射线拾取。
-- 资料箱仍有主简历、必选照片和五个补充文件。工作台关闭后再打开，测试草稿仍保留。表单内按 W 输入文字时，人物位置不变。
-- Esc 关闭和焦点返回资料箱 / 工作台检查通过；公告板四个外链及新标签说明、铁砧未开放说明、熔炉无任务状态检查通过。
-- 390×844 CSS 视口：通过点击资料箱和工作台操作，页面及两类 dialog 无横向溢出，面板可纵向滚动，关闭按钮保持可用。
-- 实时切换低性能 / 减少动态效果后草稿仍保留；减少动态效果下资料箱直接到达并开面板。
-- `?view=2d` 的资料与申请入口可用。此检查验证显式禁用 3D 的分支，未关闭设备 GPU 或模拟真正的驱动故障；系统减少动态效果事件由代码接入，本轮通过页面选项验证相同 Journey 行为，未修改用户的系统设置。
+At 390×844, chest/workbench panels scrolled without horizontal overflow and close remained usable. Graphics/motion toggles retained drafts; reduced-motion approach opened immediately. `?view=2d` verified the explicit fallback, without disabling hardware or simulating driver failure. System preferences were not modified.
 
-## 性能条件与限制
+## Performance observations
 
-场景在 `#eco-canvas` 上暴露 2 秒窗口的 FPS、绘制调用、DPR、质量、人物位置等诊断字段。以下是短窗口观察，不能代替不同硬件上的基准测试。
+Two-second diagnostics exposed FPS, draw calls, DPR, quality and character position. Short samples are not hardware benchmarks.
 
-| 条件 | 观察 |
+| Conditions | Observation |
 | --- | --- |
-| 默认预览 584×562，普通模式，DPR 1.5，阴影及玻璃透射开启 | 多次采样 59–60 FPS，室内约 107–293 次绘制调用，随镜头和可见物体变化 |
-| 宽屏布局，实际 CSS 视口 1066×600，DPR 1.2，普通模式 | 60 FPS，室内一次采样 293 次绘制调用；工具请求的 1280×720 因桌面缩放产生不同 CSS 尺寸，记录实际值 |
-| 手机 390×844，低性能模式，DPR 1，阴影关闭、透明材质简化 | 60–61 FPS，室内约 109–121 次绘制调用，无横向溢出 |
+| Default 584×562, normal quality, DPR 1.5, shadows/glass transmission | 59–60 FPS; approximately 107–293 indoor draw calls as the view changed. |
+| Actual 1066×600 CSS viewport, DPR 1.2, normal quality | 60 FPS; one 293-call sample. A requested 1280×720 was scaled by the desktop. |
+| Simulated mobile 390×844, low quality, DPR 1 | 60–61 FPS; approximately 109–121 indoor calls; no horizontal overflow. |
 
-参考站同时运行时曾出现 19 FPS；视口初始化过程中出现过 1 FPS。关闭参考页、重新加载并完成视口初始化后恢复上述采样。自动接近计时已修正，避免低帧率下持续按截断时间缓慢前进；家具碰撞仍按小步检查。
+A concurrent reference page produced 19 FPS, and viewport initialization briefly showed 1 FPS. Closing it/reloading restored the samples above. Approach timing was corrected for low-frame-rate travel while collision remained substepped.
 
-未进行 CPU/GPU 人工限速、物理手机、弱网或长时间热负载测试，未读取 GPU 型号。减少动态效果在静止时停止渲染循环，FPS 字段可能保留之前的数值，不代表仍持续渲染。
+No CPU/GPU throttling, physical-phone, weak-network or prolonged-load test was performed; no GPU model was read. Reduced motion stops idle rendering, so diagnostic FPS can retain an older value.
 
-## 回归与真实接口边界
+## Tests and limits
 
-`node --test tests/*.test.mjs` 检查开场顺序、边界、门、重复点击保护、跳过和减少动态效果；新增导航测试覆盖所有入口两两可达、每步合法、长距离防穿透、边界和取消。
+At that stage, four reported test entries, build and whitespace checks passed. Tests covered introduction ordering/bounds/door/duplicates/skip/motion, all-pairs furniture reachability, legal steps, long-move collision and cancellation. Business tests used mocked DOM/API for uploads, validation, warnings, form focus, independent drafts, downloads and background polling. Stage C simulation was not repeated.
 
-`npm run build`、`node --test tests/*.test.mjs`（4 项全部通过）与 `git diff --check` 均通过。
+Production browser checks did not upload personal material or call AI. A read-only local `/health` check timed out, so real parsing, full generation and three real DOCX downloads remained unverified. Empty panels or simulated screenshots were not generation evidence.
 
-现有业务回归使用模拟 DOM 与接口，检查上传契约、验证、警告、原表单搬移与焦点、独立草稿、三份下载地址、真实任务状态的映射和后台轮询。阶段 C 的模拟浏览器上传 / 任务 / 下载记录保留，本轮未重复启动该模拟服务。
+Outdoor free exploration, jumping and dynamic physics were pending at this stage. Indoor navigation used one fixed plane and authored furniture footprints; moving furniture required matching collision updates. No accounts, persistent history, model switching or job search API existed yet. Real low-end graphics and movement still required hardware testing.
 
-本轮生产配置浏览器没有提交个人资料，也没有执行 AI 生成。本地后端 `/health` 只读检查超时，因此真实文件解析、任务全生命周期和三份真实 DOCX 下载仍需后端运行后的联调。不得将回归测试、空任务面板或阶段 C 的模拟截图当作真实生成证据。
+## Screenshots
 
-## 已知后续
-
-室外目前保持 A/B 的自动开场路线，未实现室外自由探索、自由跳跃或动态物理物体。室内使用单层固定平面与作者定义的家具范围；修改家具摆放时需同步导航范围。低矮家具可能遮住脚部，人物头部与躯干保持可见；遮挡墙和屋顶不挡人物。
-
-没有账号、刷新后历史持久化、模型切换接口、岗位搜索或推荐 API。刷新仍清空页面内存中的资料 ID 与草稿，设置菜单的实时模式切换不刷新。实际低端设备上的玻璃成本、移动手感和性能仍需真机验收。
-
-## 截图
-
-![树下开场](screenshots/stage-d-intro.jpg)
-![人物移动与镜头](screenshots/stage-d-walk.jpg)
-![手机资料箱](screenshots/stage-d-mobile-upload.jpg)
-![手机工作台](screenshots/stage-d-mobile-workspace.jpg)
+![Tree introduction](screenshots/stage-d-intro.jpg)
+![Movement and camera](screenshots/stage-d-walk.jpg)
+![Mobile chest](screenshots/stage-d-mobile-upload.jpg)
+![Mobile workbench](screenshots/stage-d-mobile-workspace.jpg)

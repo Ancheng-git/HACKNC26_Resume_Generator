@@ -8,4 +8,4 @@ await copyThree(root);
 await rm(resolve(root, 'dist'), { recursive: true, force: true });
 await mkdir(resolve(root, 'dist'));
 await cp(resolve(root, 'src'), resolve(root, 'dist'), { recursive: true });
-console.log('Built MineStory into dist/');
+console.log('Built MineJob into dist/');

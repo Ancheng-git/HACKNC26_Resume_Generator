@@ -560,6 +560,13 @@ try {
   box(bed, [0.6, 0.12, 1.22], [0, 0.3, 0], 'wool #f2f2ec');
   box(bed, [0.635, 0.16, 0.86], [0, 0.32, 0.2], 'wool #c94b4b');
   box(bed, [0.42, 0.08, 0.22], [0, 0.4, -0.47], 'wool #ffffff');
+  // Small floor lamp between the bed and workbench, against the back wall.
+  const floorLamp = new THREE.Group(); floorLamp.position.set(0.9, 0.36, -1.37); house.add(floorLamp);
+  box(floorLamp, [0.28, 0.06, 0.28], [0, 0.03, 0], 'metal #4a5052');
+  box(floorLamp, [0.045, 0.86, 0.045], [0, 0.49, 0], 'metal #806647');
+  box(floorLamp, [0.32, 0.26, 0.32], [0, 1.02, 0], lamp);
+  box(floorLamp, [0.34, 0.035, 0.34], [0, 1.1675, 0], 'metal #806647');
+  box(floorLamp, [0.34, 0.035, 0.34], [0, 0.8725, 0], 'metal #806647');
   // Three framed paintings in a row above the bed.
   for (const [x, sky] of [[0.906, '#7cc7e8'], [1.344, '#f4b183'], [1.781, '#a9b8f0']]) box(house, [0.34, 0.5, 0.03], [x, 2.3, -1.62], `painting ${sky}`);
   // Four bookshelf columns, two blocks high, books facing into the room (+x, toward the camera).
@@ -592,7 +599,7 @@ try {
   plant(house, -1.806, 1.96, -1.4297, 0.6);
   plant(house, -1.806, 1.96, -0.6484, 0.6);
 
-  const storageChest = new THREE.Group(); storageChest.position.set(-1.48, 0.36, 0.35); house.add(storageChest);
+  const storageChest = new THREE.Group(); storageChest.position.set(-1.67, 0.36, 0.44); storageChest.rotation.y = Math.PI / 2; house.add(storageChest);
   // A double chest: dark-edged planks, a lid hinged at the back, and a silver latch across the seam.
   box(storageChest, [0.88, 0.56, 0.66], [0, 0.28, 0], 'chest_side #b07a3a');
   const chestLid = new THREE.Group(); chestLid.position.set(0, 0.56, -0.33); storageChest.add(chestLid);
@@ -603,14 +610,78 @@ try {
   box(board, [1.46, 1.03, 0.09], [0, 0, -0.02], 'oak_log_side #6e4f2e');
   box(board, [1.38, 0.95, 0.13], [0, 0, 0], 'notice #d1ae74');
   const furnace = new THREE.Group(); furnace.position.set(1.57, 0.36, 0.87); house.add(furnace);
-  box(furnace, [0.78, 0.88, 0.7], [0, 0.44, 0], 'furnace #85958e');
-  box(furnace, [0.66, 0.1, 0.64], [0, 0.91, 0], 'stone #a7b5a9');
-  box(furnace, [0.53, 0.38, 0.035], [0, 0.38, 0.365], 'plain #354a42');
+  // Stay inside the existing navigation footprint; leave a real, deep firebox.
+  const iron = new THREE.MeshStandardMaterial({ color: '#303139', roughness: 0.72, metalness: 0.45 });
+  const firebricks = ['#805044', '#995d48', '#b37455'].map(color => new THREE.MeshStandardMaterial({ color, roughness: 0.95 }));
+  box(furnace, [0.78, 0.12, 0.7], [0, 0.06, 0], iron);
+  box(furnace, [0.72, 0.72, 0.15], [0, 0.48, -0.26], iron);
+  for (const side of [-1, 1]) for (let row = 0; row < 4; row++) {
+    box(furnace, [0.12, 0.17, 0.68], [side * 0.32, 0.205 + row * 0.18, 0], firebricks[(row + (side + 1) / 2) % 3]);
+  }
+  box(furnace, [0.51, 0.16, 0.68], [0, 0.78, 0], firebricks[1]);
+  box(furnace, [0.78, 0.08, 0.7], [0, 0.9, 0], iron);
+  box(furnace, [0.27, 0.35, 0.28], [0.13, 1.115, -0.16], iron);
+  box(furnace, [0.35, 0.06, 0.36], [0.13, 1.32, -0.16], iron);
+  for (const side of [-1, 1]) box(furnace, [0.035, 0.6, 0.035], [side * 0.257, 0.42, 0.345], iron);
+  box(furnace, [0.52, 0.05, 0.045], [0, 0.7, 0.345], iron);
   const emberMaterial = new THREE.MeshStandardMaterial({ color: '#3c352d', emissive: '#ffad39', emissiveIntensity: 0, roughness: 0.8 });
-  const embers = box(furnace, [0.38, 0.12, 0.025], [0, 0.25, 0.389], emberMaterial);
-  for (const x of [-0.19, 0, 0.19]) box(furnace, [0.025, 0.31, 0.06], [x, 0.38, 0.4], 'metal #70827a');
-  const furnaceLight = new THREE.PointLight('#ffc275', 0, 2.3); furnaceLight.position.set(0, 0.45, 0.6); furnace.add(furnaceLight);
-  const anvil = new THREE.Group(); anvil.position.set(-0.5, 0.36, 0.6); house.add(anvil);
+  const embers = box(furnace, [0.48, 0.07, 0.39], [0, 0.155, 0.11], emberMaterial);
+  for (const x of [-0.17, 0, 0.17]) box(furnace, [0.035, 0.15, 0.04], [x, 0.21, 0.34], iron);
+  const furnaceLight = new THREE.PointLight('#ff9c42', 0, 3); furnaceLight.position.set(0, 0.45, 0.54); furnace.add(furnaceLight);
+
+  // Shared pixel flame texture: no external assets or per-frame geometry allocation.
+  const flameCanvas = document.createElement('canvas'); flameCanvas.width = 32; flameCanvas.height = 64;
+  const flameContext = flameCanvas.getContext('2d');
+  for (const [color, outline] of [
+    ['#ff541c', [[5,61],[1,45],[8,33],[10,19],[16,2],[18,25],[26,16],[25,38],[31,48],[26,61]]],
+    ['#ffb52e', [[9,61],[6,47],[12,36],[15,20],[19,39],[25,32],[25,49],[23,61]]],
+    ['#fff2a2', [[12,61],[10,51],[15,40],[18,48],[21,53],[20,61]]],
+  ]) {
+    flameContext.fillStyle = color; flameContext.beginPath();
+    outline.forEach(([x, y], index) => index ? flameContext.lineTo(x, y) : flameContext.moveTo(x, y));
+    flameContext.closePath(); flameContext.fill();
+  }
+  const flameTexture = new THREE.CanvasTexture(flameCanvas);
+  flameTexture.colorSpace = THREE.SRGBColorSpace; flameTexture.magFilter = THREE.NearestFilter;
+  const fire = new THREE.Group(); fire.visible = false; furnace.add(fire);
+  const flames = Array.from({ length: 5 }, (_, index) => {
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTexture, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+    sprite.center.set(0.5, 0); sprite.raycast = () => {};
+    fire.add(sprite); return sprite;
+  });
+  const sparkCount = 28, sparkPositions = new Float32Array(sparkCount * 3), sparkColors = new Float32Array(sparkCount * 3);
+  const sparkGeometry = new THREE.BufferGeometry();
+  sparkGeometry.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
+  sparkGeometry.setAttribute('color', new THREE.BufferAttribute(sparkColors, 3));
+  const sparks = new THREE.Points(sparkGeometry, new THREE.PointsMaterial({ size: 3.5, sizeAttenuation: false, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+  sparks.frustumCulled = false; sparks.raycast = () => {}; fire.add(sparks);
+  function animateFurnace(time, moving) {
+    if (!fire.visible) return;
+    flames.forEach((sprite, index) => {
+      const wave = Math.sin(time * 9 + index * 2.1), height = 0.4 + (index % 2) * 0.14 + wave * 0.065;
+      sprite.position.set((index - 2) * 0.087 + Math.sin(time * 5 + index) * 0.012, 0.18, 0.25 + (index % 2) * 0.04);
+      sprite.scale.set(0.17 + wave * 0.018, height, 1);
+      sprite.material.opacity = 0.55 + wave * 0.1;
+      sprite.material.rotation = Math.sin(time * 4 + index) * 0.055;
+    });
+    sparks.visible = moving;
+    sparkGeometry.setDrawRange(0, lowQuality ? 14 : sparkCount);
+    for (let index = 0; index < sparkCount; index++) {
+      const life = (time * (0.5 + (index % 5) * 0.09) + index * 0.618) % 1;
+      const drift = Math.sin(index * 7.3 + time * 1.8);
+      sparkPositions[index * 3] = Math.sin(index * 13.7) * 0.18 + drift * life * 0.09;
+      sparkPositions[index * 3 + 1] = 0.27 + life * 1.12;
+      sparkPositions[index * 3 + 2] = 0.37 + life * 0.06;
+      const glow = 2 * Math.sin(Math.PI * life) * (1 - life);
+      sparkColors[index * 3] = glow;
+      sparkColors[index * 3 + 1] = glow * (0.45 + (index % 3) * 0.16);
+      sparkColors[index * 3 + 2] = glow * 0.12;
+    }
+    sparkGeometry.attributes.position.needsUpdate = sparkGeometry.attributes.color.needsUpdate = true;
+    emberMaterial.emissiveIntensity = 1.5 + Math.sin(time * 8) * 0.25;
+    furnaceLight.intensity = 2.5 + Math.sin(time * 11) * 0.3;
+  }
+  const anvil = new THREE.Group(); anvil.position.set(-1.12, 0.36, -1.46); house.add(anvil);
   // A dark iron anvil: wide foot, stepped base, narrow waist and a long face.
   box(anvil, [0.47, 0.18, 0.375], [0, 0.09, 0], 'metal #4b5254');
   box(anvil, [0.375, 0.05, 0.28], [0, 0.205, 0], 'metal #4b5254');
@@ -621,8 +692,8 @@ try {
   box(doorwayMarker, [0.65, 0.025, 0.38], [0.44, 0.4, 1.7], 'plain #a0d9a5');
   box(doorwayMarker, [0.09, 0.028, 0.24], [0.44, 0.416, 1.7], 'plain #f5fff0');
   door.traverse(mesh => { if (mesh.isMesh) mesh.userData.workshop = 'door'; });
-  const interactive = { chest: storageChest, table, board, furnace, anvil, door: doorwayMarker };
-  const labelAnchors = { chest: [-1.48,1.23,0.45], table: [-0.234,1.5,-1.15], board: [-0.234,2.96,-1.59], furnace: [1.65,1.45,1.02], anvil: [-0.3,1.3,1.13], door: [0.44,1.0,1.74] };
+  const interactive = { chest: storageChest, table, board, furnace, door: doorwayMarker };
+  const labelAnchors = { chest: [-1.67,1.23,0.44], table: [-0.234,1.5,-1.15], board: [-0.234,2.96,-1.59], furnace: [1.65,1.45,1.02], door: [0.44,1.0,1.74] };
   const objectButtons = Object.fromEntries(Object.keys(interactive).map(key => [key, document.querySelector(`[data-workshop="${key}"]`)]));
   const materialList = mesh => Array.isArray(mesh.material) ? mesh.material : [mesh.material];
   // Give one object its own copies of shared materials (single or per-face arrays), one copy per original,
@@ -838,7 +909,7 @@ try {
       group.traverse(mesh => {
         if (!mesh.isMesh || mesh === embers) return;
         materialList(mesh).forEach(material => {
-          material.emissive.set(name === key ? '#84a745' : '#000000');
+          material.emissive.set(name === key ? name === 'furnace' ? '#ff9c42' : '#84a745' : '#000000');
           material.emissiveIntensity = name === key ? 0.22 : 0;
         });
       });
@@ -893,7 +964,8 @@ try {
     const lit = Boolean(summary?.lit);
     emberMaterial.color.set(lit ? '#ffbf5e' : '#3c352d');
     emberMaterial.emissiveIntensity = lit ? 1.6 : 0;
-    furnaceLight.intensity = lit ? 1.8 : 0;
+    furnaceLight.intensity = lit ? 2.5 : 0;
+    fire.visible = lit;
     objectButtons.furnace.dataset.lit = host.dataset.furnaceLit = String(lit);
     if (summary) objectButtons.furnace.querySelector('small').textContent = summary.text;
     render();
@@ -947,6 +1019,7 @@ try {
     door.rotation.y = journey.phase === 'inside' ? (navigation.zone === 'inside' || navigation.destination === 'door' || Math.hypot(position[0]-doorway.threshold[0], position[2]-doorway.threshold[1]) < 2 ? Math.PI / 2 : 0) : journey.phase === 'entering' ? smooth(journey.time / 0.65) * Math.PI / 2 : 0;
     let cutaway = journey.phase === 'inside' && navigation.zone === 'inside' || journey.phase === 'entering' && journey.time >= 1.3;
     chestLid.rotation.x += ((chestOpen ? -1.15 : 0) - chestLid.rotation.x) * (snap || journey.reduced ? 1 : 1 - Math.exp(-9 * dt));
+    chestLid.position.z = -0.33 + Math.sin(-chestLid.rotation.x) * 0.17; // Slide the lid inward as it opens to clear the wall.
     // The dog eases into its new pose; while ambient motion is paused it changes pose at once.
     poseDog(snap || paused ? 1 : 1 - Math.exp(-8 * dt));
     if (!paused && dogPose === 'stand') dogParts.tail.rotation.y = Math.sin(elapsed * 12) * 0.5;
@@ -1028,7 +1101,7 @@ try {
     }
     syncUI();
   }
-  function render() { renderer.render(scene, camera); }
+  function render() { animateFurnace(elapsed, !paused); renderer.render(scene, camera); }
   function resize() {
     const bounds = host.getBoundingClientRect();
     if (!bounds.width || !bounds.height) return;
@@ -1132,7 +1205,7 @@ try {
     render();
     const link = document.createElement('a');
     link.href = renderer.domElement.toDataURL('image/png');
-    link.download = `minestory-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+    link.download = `minejob-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
     link.click();
   });
   document.querySelector('#eco-reduce').addEventListener('click', () => { journey.setReduced(!journey.reduced); paused = journey.reduced; clearControls(); syncMotion(); });
@@ -1159,7 +1232,7 @@ try {
   renderer.compile(scene, camera); // compile every material up front, so zooming out to new parts of the island does not stall
   resize(); syncMotion(); updateFurnace(window.furnaceState?.()); status.hidden = true; host.dataset.ready = 'true';
 } catch (error) {
-  if (options.get('view') !== '2d') console.error('MineStory scene unavailable:', error);
+  if (options.get('view') !== '2d') console.error('MineJob scene unavailable:', error);
   document.querySelector('#scene-options').open = true;
   host.replaceChildren();
   document.querySelector('#journey-intro').hidden = true;

@@ -1,88 +1,61 @@
-# MineStory
+# MineJob frontend
 
-MineStory opens with a real Three.js eco workshop scene: a block island, trees, an original adventurer, a glass cabin, solar panels, a pond and garden beds. Stage B adds a continuous introduction: Click to start, wake and stand, follow the path, enter as a guest, and reveal the cabin interior. Skip goes to the doorway; direct entry opens the interior immediately. Reduced motion skips character and camera travel and defaults ambient motion to paused. There is no frontend framework or database. The frontend connects to FastAPI at http://127.0.0.1:8000; see the integration section below. Selected files, background IDs and applications are held in page memory and cleared on reload.
+An explorable Three.js island and workshop, built with plain JavaScript. The materials chest opens the upload form, the workbench manages application drafts and results, the noticeboard searches jobs, and the furnace shows generation status. The anvil is decorative. A floor lamp stands between the bed and workbench.
 
-Stage C makes the interior usable: click the **资料箱** to upload through the existing form, **工作台** for applications and independent drafts, **公告板** for external green career resources, **熔炉** for backend task states, and **铁砧** for the unavailable model settings notice. The same forms open in a native dialog over the scene. Esc or Return to interior closes it and restores object focus. Upload success closes the chest; errors keep the form editable. No account or API Key is collected.
+## Development
 
-The header's **Your materials** and **Applications** links also retain the original standalone pages. Routes and dialogs share one document and retain drafts and uploaded background IDs. If WebGL or scene loading fails, these ordinary HTML links and forms remain available. Direct fallback: `http://localhost:5173/#profile`.
+Use Node.js 18.17 or later. From this directory:
 
-See [Stage C verification](docs/stage-c.md) for current scope, screenshots and the distinction between simulated QA and real backend integration; [Stage B](docs/stage-b.md) covers the continuous introduction and [Stage A](docs/stage-a.md) records scene asset sources. Free movement and accounts are not implemented.
+```bash
+npm ci
+npm run dev
+```
 
-## Windows setup in Cursor
+Open **http://localhost:5173**. Edit `src/` and refresh the browser; the server has no hot reload. Stop it with Ctrl+C. Follow the [root README](../README.md) to install and run the backend on port 8000.
 
-1. Install [Node.js LTS](https://nodejs.org/) if `node --version` does not work in PowerShell. Node 18.17 or later is required.
-2. In Cursor, choose **File → Open Folder** and select this repository's `frontend` folder.
-3. Open Cursor's terminal (**Terminal → New Terminal**) and run:
-
-   ```powershell
-   npm ci
-   npm run dev
-   ```
-
-4. Open **http://localhost:5173** in your browser. Press **Ctrl+C** in the terminal to stop the server. Edit files under `src/`; refresh the browser to see changes. The server does not provide hot reload.
-
-`npm ci` installs the pinned Three.js 0.180.0 dependency. Dev and build copy its browser modules and MIT license into ignored `src/vendor/`. No remote CDN is needed at runtime.
-
-## Production build and local preview
-
-```powershell
+```bash
+node --test tests/*.test.mjs
 npm run build
 npm run preview
 ```
 
-The build first prepares local Three.js modules, then copies `src/` into `dist/`. Preview serves the built site at **http://localhost:5173**. Stop the development server before starting preview because both use the same port. To use another port in PowerShell, run `$env:PORT=5174; npm run dev`.
+Preview serves `dist/` on port 5173, so stop development before starting preview. To change ports on macOS/Linux, use `PORT=5174 npm run dev`; in PowerShell, use `$env:PORT=5174; npm run dev`. Add the matching frontend origin to the backend's `RESUME_FRONTEND_ORIGINS`.
 
-## Project layout
+## Scene and audio
 
-- `src/index.html` — page structure and English copy
-- `src/eco-scene.js` — procedural Three.js geometry, physical glass/water, lights and one render loop
-- `src/eco-scene.css` — scene overlays and responsive glass controls
-- `src/journey.js` — ordered animation states, authored route, skip/direct entry and reduced motion
-- `src/workshop.js` — scene dialogs, existing form relocation, focus return and task status panel
-- `src/vendor/` — generated local Three.js runtime, ignored by Git
-- `src/styles.css` — voxel and Aero styling, responsive layout, motion
-- `src/script.js` — local onboarding interactions
-- `src/assets/minestory-world.png` — retained only for the original upload page, not the 3D scene
-- `src/assets/clouds.png` — drifting cloud overlay
-- `src/assets/oak-planks.jpg`, `src/assets/wood-post.png` — wooden sign materials
-- `src/assets/chest-closed.png`, `src/assets/chest-open.png` — experience chest states
-- `tools/dev-server.mjs` — localhost server using Node's built-in modules
-- `tools/build.mjs`, `tools/vendor.mjs` — production copy and local dependency preparation
-- `dist/` — generated build output; not the editable source
+WASD and arrows move the character; Shift runs and Ctrl crouches. Click the ground to walk, or an object to approach it. E/Enter interacts with nearby objects, and Esc cancels travel or closes a dialog. The doorway connects the interior and island without clearing materials or drafts.
 
-## ChatGPT/Sites-specific parts
+The upper-right menu controls graphics, reduced motion, view range, screenshots and sound. Background music starts after a user gesture and loops at low volume. Sound controls both music and effects; hidden tabs pause audio. The BGM is the user-supplied Minecraft track in `src/assets/audio/background.mp3`; the interaction effects are original local WAV files.
 
-The original checkout has `.openai/hosting.json`, which names the private hosted Site and tells Sites to publish the `dist/` folder. **It is not used for localhost development or a production build**, and the downloadable ZIP omits it to prevent accidentally targeting the hosted Site. No ChatGPT login, Sites account, secret, or external API is needed locally. The local substitute for Sites hosting is the included Node localhost server.
+Skip intro stops at the doorway; direct entry opens the interior immediately. Reduced motion skips automatic travel. `?motion=reduce`, `?quality=low` and `?view=2d` select reduced motion, lower graphics cost and the form fallback. Forms remain accessible when WebGL is unavailable.
 
-The page loads Google Fonts when online. If offline, it uses local `monospace` and `Arial` fallbacks; all other visual assets are local. Personal documents and photos are sent to the backend when Save to chest is clicked.
+## Backend contract
 
-## Backend integration
+- `src/api.js` defines `API_BASE`, defaulting to `http://127.0.0.1:8000`.
+- Save to chest sends multipart `POST /api/backgrounds` with `resume`, up to five repeated `background_files`, and `photo`. The browser supplies the multipart boundary.
+- PDF/DOCX/DOC files are limited to 10 MB each; JPG/PNG photos to 5 MB; total file content to 30 MB. The backend enforces request size, parsing and content limits. The UI requires a photo.
+- Generate sends `company`, `job_description` and `background_id` to `POST /api/generations`. The materials must be ready and no other task may be active.
+- Status polling uses `GET /api/generations/{id}`. Closing a dialog or exploring the island does not stop polling. Successful results expose three real layout previews and DOCX downloads; failures show safe feedback.
+- Job search uses `/api/jobs/categories`, `/api/jobs` and `/api/jobs/{id}`. Importing a draft preserves the company, role title and complete JD; only explicit Generate submits a task. The provider key stays in the backend.
 
-Run the frontend here on port 5173 and the cloned backend on port 8000. Configure the backend CORS allowlist (`RESUME_FRONTEND_ORIGINS`) to include the exact frontend origin, e.g. `http://localhost:5173`. Follow the backend README for its dependencies and generation runtime.
+Materials, drafts and selected applications live in page memory. Reloading clears them; restarting the backend invalidates upload and task IDs. Uploads and AI generation require the running backend and its local dependencies.
 
-- `src/api.js` defines `API_BASE` (default `http://127.0.0.1:8000`).
-- Save to chest sends multipart `POST /api/backgrounds`: `resume`, zero to five repeated `background_files`, and `photo`. No manual Content-Type header is set.
-- Documents: PDF/DOCX/DOC, at most 10 MB each; photo: JPG/PNG, at most 5 MB; total file content at most 30 MB. Backend remains authoritative for request limits, PDF page count and readable content.
-- Generation requires `ready_for_generation: true` and `background_id`. Upload warnings are shown.
-- The combined Title field maps to backend `company`; Description maps to `job_description`. `POST /api/generations` also includes `background_id`. The supplied backend contract does **not** use `title`/`description` as JSON keys.
-- Status is polled via `GET /api/generations/{id}` every two seconds after the previous response. Terminal states stop polling. Returned file URLs are used for the three download tabs; inline Word preview is not implemented.
-- Backend restart invalidates both background and task IDs. Re-upload personal materials after restart. The frontend has no account or persistent history.
+## Main files
 
-Check the frontend request workflow without running the backend:
+| File | Purpose |
+| --- | --- |
+| `src/index.html` | Page structure, forms and English copy |
+| `src/eco-scene.js`, `src/eco-scene.css` | Scene geometry, rendering and overlays |
+| `src/room-navigation.js`, `src/journey.js` | Collision, navigation and introduction |
+| `src/workshop.js`, `src/workspace.js` | Dialogs, drafts, generation and document results |
+| `src/noticeboard.js`, `src/api.js` | Job search and HTTP requests |
+| `src/scene-audio.js`, `src/assets/audio/` | Music, interaction effects and mute control |
+| `tools/` | Local server, build and dependency preparation |
 
-```powershell
-node tests/workspace.test.mjs
-node tests/journey.test.mjs
-```
+Dev/build copy pinned Three.js modules and their MIT license into ignored `src/vendor/`. Google Fonts use Arial/monospace fallbacks when offline. Original image assets remain for the form view; the 3D world uses procedural geometry and textures.
 
-Real upload parsing and AI generation still require end-to-end testing with the backend running.
+## Simulated QA
 
-For explicitly simulated browser QA, build and run `node tests/mock-preview.mjs`, then open `http://localhost:5175`. This separate local fixture serves a copy with a SIMULATED banner and stub upload/task/download responses; it never changes the production API base or contacts port 8000. It creates non-personal test files in ignored `tests/.fixtures/`. A title containing `fail` produces a simulated failure. Stop this fixture when done.
+After a build, `node tests/mock-preview.mjs` starts a separate fixture on port 5175 with a SIMULATED banner. Its synthetic uploads, tasks and downloads do not contact the production backend; a title containing `fail` simulates failure. Fixtures are generated in ignored `tests/.fixtures/`. Simulated checks do not establish real document parsing or AI output quality.
 
-## Stage D
-
-Indoor WASD / arrow movement, collision, click-to-approach interaction and following camera are implemented on the existing scene. See [Stage D browser QA and performance conditions](docs/stage-d.md). Scene options apply without reloading. Run `node --test tests/*.test.mjs` and `npm run build` from `frontend/`.
-
-## English UI and island exploration
-
-The current scene has English controls and frontend translations of backend errors, a shorter opening walk at the original speed, and two-way doorway travel. WASD, arrow keys and ground clicks work on the existing island, with shoreline, water, tree and building collision. Forms pause movement; closing restores focus and clears held keys. Materials, drafts and task polling survive doorway travel while the page stays open. See [browser verification and remaining limits](docs/stage-e.md).
+The [contract review](docs/interface-contract-check.md) and [Stage A](docs/stage-a.md), [B](docs/stage-b.md), [C](docs/stage-c.md), [D](docs/stage-d.md), [E](docs/stage-e.md) notes record earlier verification and screenshots; their stated limitations describe those historical stages.

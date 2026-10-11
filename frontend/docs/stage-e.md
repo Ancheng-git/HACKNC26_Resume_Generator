@@ -1,40 +1,38 @@
-# 英文界面、短开场与小岛探索验收
+# English UI, shorter introduction and island exploration
 
-日期：2026-10-10。分支：`codex/minestory-stage-a`。保留 A/B/C/D 的场景和业务实现；未修改后端，未推送、合并或提交。
+Date: 2026-10-10. Historical branch: `codex/minestory-stage-a`. Stages A/B/C/D were preserved. No backend changes, push, merge or commit occurred at that stage.
 
-## 本轮实现
+## Implemented at this stage
 
-- 所有应用自有开场、入口、表单、状态、错误、警告与降级文案改为英文。前端映射现有后端中文错误及动态 PDF 提取警告；未知中文错误显示英文通用说明。用户输入、文件名保持原样，系统文件选择窗口遵循操作系统语言。
-- 树与树下起点移近小屋，同步缩短实体道路和自动路线。原步速 1.25 世界单位/秒保持不变，步行段约 4.18 秒；苏醒和站起另需约 2.4 秒。跳过和直接进入保留。
-- 室内外共用导航与业务状态，通过门口退出和再次进入。原小岛地块构成探索边界，树干、池塘及岸沿、花坛、家具和建筑墙壁有碰撞；门口保留通路。可用 WASD、方向键或点击地面。镜头平滑调整室内外距离，必要时隐藏遮挡墙/屋顶、淡化挡住人物的树冠。
-- 业务面板仍暂停角色控制；关闭时清空按键并恢复触发物焦点。出入不重播开场、不清空资料、申请和任务。
+- English application copy for the introduction, controls, forms, status, errors, warnings and fallback. Frontend mapping translated legacy Chinese backend errors and dynamic PDF extraction warnings; unknown messages used an English fallback. User input/filenames remained unchanged; system file pickers followed the OS language.
+- The tree/start moved closer to the cabin, with matching road and automatic route. Base walk speed stayed 1.25 world units/second; that stage's walk took about 4.18 seconds, plus about 2.4 seconds waking/standing. Skip/direct entry remained.
+- Shared indoor/outdoor navigation and state, with two-way doorway travel. Original island tiles bounded exploration; trees, pond/banks, garden, furniture and walls collided while the doorway stayed open. WASD/arrows/ground clicks worked, with camera distance/cutaways and tree-crown fading as needed.
+- Forms paused movement; closing cleared keys and restored focus. Door travel neither replayed the introduction nor cleared materials, applications or tasks.
 
-## 浏览器实测
+## Browser checks
 
-生产配置 `http://localhost:5173/`：首次 Click to start、门牌访客进入、室内工作台、Esc、点击 Explore island、室外 A/W 移动、实体墙阻挡、点击草地自动步行、点击 Enter workshop 再次进屋。工作台中 `Island round trip` 草稿在出入后保留。点击草地实测由 (0.42, 3.03) 走至 (-3.37, 2.41)。浏览器错误日志为空。
+Production preview at port 5173 exercised start, guest entry, workbench/Esc, Explore island, outdoor A/W, wall blocking, ground walking and re-entry. An `Island round trip` draft survived. A ground click moved the character from (0.42, 3.03) to (-3.37, 2.41). Browser error logs were empty.
 
-独立模拟服务 `http://localhost:5175/`（SIMULATED banner）：使用无个人资料的 fixture 文件验证上传后自动关闭、再次打开仍有简历与照片、中文提取警告英文显示。生成失败任务后关闭面板、出屋、再次进屋，任务持续更新，中文超时错误英文显示。重试任务完成后，三个文档标签保留各自返回链接。表单内按 W 不移动；Esc 关闭后位置保持，焦点返回 Workbench，控制恢复。
+The separate SIMULATED fixture on port 5175 checked upload auto-close, retained resume/photo, translated extraction warnings, failed-task updates across a doorway round trip and translated timeout errors. A retry completed with three distinct returned document links. Typing W in forms did not move the character; Esc restored workbench focus and controls.
 
-390×844 浏览器视口检查英文工作台，表单在面板内部滚动、无横向溢出，关闭按钮可操作。临时视口已恢复。不是物理手机测试。
+A simulated 390×844 viewport verified scrolling English workbench forms, no horizontal overflow and usable close controls. The temporary viewport was reset; this was not a physical-phone test.
 
-## 回归与构建
+## Regression
 
-`node --test tests/*.test.mjs`：6 项全部通过。覆盖开场时序、重复触发、跳过、reduced-motion、自然步速与路线碰撞；家具路径、门口往返、岛岸/池塘/树干/墙体碰撞和防穿透；上传契约、验证、英文后端消息、独立草稿、下载链接、轮询和面板焦点。
+Six reported test entries passed at that stage: introduction timing/duplicates/skip/motion/routes, furniture paths, doorway round trips, shoreline/pond/tree/wall collision and tunnelling, uploads, English error presentation, independent drafts, downloads, polling and focus. Build and whitespace checks passed, with only Windows line-ending notices; no new dependency was added.
 
-`npm run build` 成功；`git diff --check` 通过（只有 Windows 换行提示）。没有新增依赖。
+## Conditions and remaining limits
 
-## 条件与仍存在的限制
+Windows desktop Codex in-app browser, normal quality, DPR 1.5, approximately 584×562 default viewport. Concurrent tabs and simulated tasks showed about 37–43 FPS and 272–393 calls; other stages observed about 50–61 FPS. There was no throttling, GPU identification, physical-phone, weak-network or prolonged-load test; these observations are not benchmarks.
 
-性能观察来自 Windows 桌面 Codex 内置浏览器，正常质量、DPR 1.5、默认约 584×562 视口；本轮多标签并行与模拟任务检查时约 37–43 FPS、272–393 draw calls，其他阶段观察约 50–61 FPS。未人工限制 CPU/GPU、未测 GPU 型号、真机、弱网或长时间热负载；不是性能基准。
+Production checks did not submit real personal material or call AI. Simulation established UI/state behavior, not actual file parsing or generation quality. Real DOCX output still needed backend integration.
 
-生产配置没有提交真实个人资料或运行真实 AI 生成。模拟服务仅验证 UI 与状态保存；真实文件解析、AI 任务和真实 DOCX 下载仍需后端联调。模拟检查不代表真实生成成功。
+Accounts, persistent history, model switching and job search were absent at that stage. The island was not expanded, and jumping/dynamic physics were not implemented. Authored collision footprints needed updates when furniture moved. Stage D's pending outdoor exploration was completed here. Later versions may implement features outside these historical notes.
 
-仍无账号、刷新后的历史持久化、模型切换、岗位搜索或推荐 API；没有扩建岛屿、跳跃或动态物理系统。导航使用作者定义的静态碰撞范围，移动家具时要同步范围。极低性能设备上的透明材质成本仍需真机验收。Stage D 文档中的“未实现室外探索”描述属于上一阶段，本轮已实现。
+## Screenshots
 
-## 截图
-
-![英文短开场](screenshots/stage-e-intro.jpg)
-![门口外观与再次进入](screenshots/stage-e-island.jpg)
-![室外角色与探索](screenshots/stage-e-explore.jpg)
-![再次进屋](screenshots/stage-e-interior.jpg)
-![英文手机工作台（模拟数据）](screenshots/stage-e-mobile-workbench.jpg)
+![English introduction](screenshots/stage-e-intro.jpg)
+![Doorway and re-entry](screenshots/stage-e-island.jpg)
+![Outdoor exploration](screenshots/stage-e-explore.jpg)
+![Return to interior](screenshots/stage-e-interior.jpg)
+![English mobile workbench, simulated data](screenshots/stage-e-mobile-workbench.jpg)

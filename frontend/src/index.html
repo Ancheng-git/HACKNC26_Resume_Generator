@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#70cced">
-  <meta name="description" content="Mine your experiences. Craft your next chapter with MineStory.">
-  <title>MineStory — Mine your experiences. Craft your next chapter.</title>
+  <meta name="description" content="Mine your experiences. Craft your next chapter with MineJob.">
+  <title>MineJob — Mine your experiences. Craft your next chapter.</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="eco-scene.css">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
   <script type="module" src="eco-scene.js"></script>
+  <script type="module" src="scene-audio.js"></script>
   <script src="api.js" defer></script>
   <script src="script.js" defer></script>
 </head>
@@ -20,10 +21,10 @@
   <section id="eco-scene" class="eco-scene" aria-labelledby="eco-title">
     <div id="eco-canvas" class="eco-canvas" role="region" aria-label="A sunlit block island: a resting adventurer under a leafy tree, a glass eco workshop with solar panels, flowers and turquoise water."></div>
     <header class="eco-header">
-      <a class="eco-brand" href="#scene" aria-label="MineStory home"><span class="eco-mark" aria-hidden="true">▧</span> MineStory<span class="eco-brand-note">THE ECO WORKSHOP</span></a>
-      <details id="scene-options"><summary aria-label="Scene settings and accessible alternatives">☰</summary><div><p>Scene settings</p><button id="eco-quality" type="button" aria-pressed="false">Low graphics mode</button><button id="eco-reduce" type="button" aria-pressed="false">Reduced motion</button><button id="eco-range" type="button">View range: Normal</button><button id="eco-shot" type="button">Take screenshot</button><a href="#profile">Form view / Your materials ↗</a><a href="#workspace">Applications ↗</a></div></details>
+      <a class="eco-brand" href="#scene" aria-label="MineJob home">MineJob</a>
+      <details id="scene-options"><summary aria-label="Scene settings and accessible alternatives">☰</summary><div><p>Scene settings</p><button id="eco-quality" type="button" aria-pressed="false">Low graphics mode</button><button id="eco-reduce" type="button" aria-pressed="false">Reduced motion</button><button id="eco-range" type="button">View range: Normal</button><button id="eco-shot" type="button">Take screenshot</button><button id="eco-audio" type="button" aria-pressed="true">Sound: On</button><a href="#profile">Form view / Your materials ↗</a><a href="#workspace">Applications ↗</a></div></details>
     </header>
-    <h1 id="eco-title" class="sr-only">MineStory · The eco workshop</h1>
+    <h1 id="eco-title" class="sr-only">MineJob · The eco workshop</h1>
     <p id="eco-status" class="eco-status" role="status">Growing your little world…</p>
     <div id="journey-intro" class="journey-intro">
       <p>A quiet beginning.</p><button id="journey-start" class="eco-primary" type="button" disabled>Click to start <span aria-hidden="true">→</span></button>
@@ -36,9 +37,8 @@
     <nav id="workshop-objects" class="workshop-objects" aria-label="Workshop objects" hidden>
       <button type="button" data-workshop="chest"><strong>Materials chest</strong><small>Walk over to upload materials</small></button>
       <button type="button" data-workshop="table"><strong>Workbench</strong><small>Walk over to prepare an application</small></button>
-      <button type="button" data-workshop="board"><strong>Noticeboard</strong><small>Explore green careers</small></button>
-      <button type="button" data-workshop="furnace"><strong>Furnace</strong><small id="furnace-label">No generation tasks</small></button>
-      <button type="button" data-workshop="anvil"><strong>Anvil</strong><small>View model settings</small></button>
+      <button type="button" data-workshop="board"><strong>Noticeboard</strong><small>Browse job opportunities</small></button>
+      <button type="button" data-workshop="furnace"><strong>Furnace</strong><small id="furnace-label">No generation tasks</small><span id="furnace-guide" class="furnace-guide" aria-hidden="true" hidden><span class="furnace-guide-text">Generating here…</span><span class="furnace-guide-arrow">↓</span></span></button>
       <button type="button" data-workshop="door"><strong>Explore island</strong><small>Walk through the doorway</small></button>
     </nav>
     <div class="journey-tools">
@@ -46,6 +46,7 @@
       <span id="journey-reduced" hidden>Reduced motion enabled</span>
       <button id="eco-motion" type="button" aria-pressed="false">Pause ambient motion</button>
     </div>
+    <audio id="eco-bgm" src="assets/audio/background.mp3" loop preload="none" hidden></audio>
     <noscript><p class="eco-fallback">JavaScript is needed for the scene and application forms.</p></noscript>
   </section>
   <dialog id="workshop-dialog" class="workshop-dialog" aria-labelledby="workshop-panel-title">
@@ -53,24 +54,25 @@
     <div id="workshop-panel-body"></div>
   </dialog>
   <template id="board-content">
-    <div class="workshop-info"><p>Find directions that connect your existing skills with climate technology and nature conservation.</p><p class="workshop-disclosure">These external career resources open in new tabs. MineStory has no job search or recommendation API integration.</p>
-      <a href="https://climatebase.org/" target="_blank" rel="noopener noreferrer"><strong>Climatebase ↗</strong><span>Jobs, organizations and career communities in climate.</span><small>Opens in a new tab</small></a>
-      <a href="https://www.terra.do/climate-jobs/job-board/" target="_blank" rel="noopener noreferrer"><strong>Terra.do ↗</strong><span>Climate career opportunities, cross-functional roles and learning resources.</span><small>Opens in a new tab</small></a>
-      <a href="https://www.conservationjobboard.com/" target="_blank" rel="noopener noreferrer"><strong>Conservation Job Board ↗</strong><span>Jobs in conservation, ecology, wildlife and the environment.</span><small>Opens in a new tab</small></a>
-      <a href="https://greenjobs.net/" target="_blank" rel="noopener noreferrer"><strong>Green Jobs Network ↗</strong><span>Career resources for green, sustainability, environmental and social impact work.</span><small>Opens in a new tab</small></a>
-    </div>
+    <section class="noticeboard" aria-label="Job search">
+      <p>Job listings via <a href="https://www.openwebninja.com/api/jsearch" target="_blank" rel="noopener noreferrer">JSearch ↗</a>. Searches default to the US. Verify availability at the source. If the provider is unavailable, the board clearly labels fictional sample jobs.</p>
+      <form id="noticeboard-filters"><label>Job category<select id="noticeboard-category" disabled><option value="">All categories</option></select></label><label>Keywords / company<input id="noticeboard-query" maxlength="300" placeholder="e.g. intern, Python"></label><label>Location<input id="noticeboard-location" maxlength="120" placeholder="e.g. Chapel Hill, NC"></label><label>Work arrangement<select id="noticeboard-remote"><option value="false">Remote or onsite</option><option value="true">Remote only</option></select></label><button type="submit" disabled>Search jobs</button></form>
+      <p id="noticeboard-status" role="status" aria-live="polite"></p>
+      <div id="noticeboard-results"></div>
+      <div class="noticeboard-pagination"><button id="noticeboard-previous" type="button" hidden>Previous</button><button id="noticeboard-next" type="button" hidden>Next</button></div>
+      <section id="noticeboard-detail" hidden aria-label="Selected job"></section>
+    </section>
   </template>
-  <template id="anvil-content"><div class="workshop-info"><span class="eco-kicker">Not available yet</span><h3>Model settings</h3><p>Model switching is not available. Applications use the backend’s current configuration.</p><p>No API keys are collected. There is no simulated save or model switch.</p></div></template>
   <div class="page-shell" hidden>
     <header class="topbar">
-      <a class="brand" href="#scene" aria-label="MineStory home"><span class="brand-cube" aria-hidden="true">✦</span> MineStory</a>
+      <a class="brand" href="#scene" aria-label="MineJob home"><span class="brand-cube" aria-hidden="true">✦</span> MineJob</a>
       <span class="topbar-note">A new chapter starts here</span>
       <a class="topbar-link" href="#how-it-works">How it works <span aria-hidden="true">↘</span></a>
     </header>
 
     <main id="top">
       <section class="hero" aria-labelledby="hero-title">
-        <div class="world-art" role="img" aria-label="A bright voxel world with a monumental MineStory sculpture, a resting adventurer, flowers and waterfalls"></div>
+        <div class="world-art" role="img" aria-label="A bright voxel world with a monumental MineJob sculpture, a resting adventurer, flowers and waterfalls"></div>
         <div class="world-clouds" aria-hidden="true"></div>
         <div class="world-water" aria-hidden="true"></div>
         <div class="world-shade"></div>
@@ -82,7 +84,7 @@
           <p>Uncover what makes your experience valuable. Craft resumes and cover letters grounded in your real story.</p>
         </div>
 
-        <div class="scene" aria-label="Start your MineStory">
+        <div class="scene" aria-label="Start your MineJob">
           <div class="onboarding-heading"><span class="step-glyph" aria-hidden="true">01</span><span>Gather what makes you, you</span></div>
 
           <div class="chest-stage" id="chest-stage">
@@ -123,20 +125,20 @@
 
       <section class="journey" id="how-it-works" aria-labelledby="journey-title">
         <div class="journey-heading"><span class="eyebrow">THE PATH AHEAD</span><h2 id="journey-title">Every great story starts somewhere.</h2><p>Follow the path from scattered memories to a next chapter that sounds like you.</p></div>
-        <div class="journey-path" aria-label="How MineStory works">
+        <div class="journey-path" aria-label="How MineJob works">
           <article class="journey-stop"><div class="stop-illustration stop-chest" aria-hidden="true"><span>▣</span></div><div class="stop-number">01 / THE GATHERING</div><h3>Collect your story</h3><p>Bring together your resume, projects, and personal notes.</p></article>
           <span class="path-dash" aria-hidden="true">◆ ┄ ◆ ┄ ◆</span>
           <article class="journey-stop"><div class="stop-illustration stop-pick" aria-hidden="true"><span>✦</span></div><div class="stop-number">02 / THE DISCOVERY</div><h3>Dig deeper</h3><p>Answer thoughtful questions that reveal the details you forgot to mention.</p></article>
           <span class="path-dash" aria-hidden="true">◆ ┄ ◆ ┄ ◆</span>
           <article class="journey-stop"><div class="stop-illustration stop-scroll" aria-hidden="true"><span>▤</span></div><div class="stop-number">03 / THE CRAFT</div><h3>Craft your next chapter</h3><p>Create tailored resumes and cover letters backed by your real experience.</p></article>
         </div>
-        <div class="journey-footer"><span class="brand"><span class="brand-cube" aria-hidden="true">✦</span> MineStory</span><span>Your real experience. No invented achievements.</span></div>
+        <div class="journey-footer"><span class="brand"><span class="brand-cube" aria-hidden="true">✦</span> MineJob</span><span>Your real experience. No invented achievements.</span></div>
       </section>
     </main>
   </div>
 
   <section id="workspace" class="workspace" hidden aria-label="Application workspace">
-    <header class="workspace-header"><a class="brand" href="#scene">✦ MineStory</a><span>Your next chapter, one application at a time.</span><button id="edit-profile" type="button">Your experience chest ↗</button></header>
+    <header class="workspace-header"><a class="brand" href="#scene">✦ MineJob</a><span>Your next chapter, one application at a time.</span><button id="edit-profile" type="button">Your experience chest ↗</button></header>
     <div class="workspace-layout">
       <aside class="jobs-panel"><div class="panel-heading"><div><small>YOUR JOURNEY</small><h1>Applications</h1></div><button id="new-job" type="button" aria-label="Add application" aria-expanded="false" aria-controls="new-job-form">＋</button></div><form id="new-job-form" class="new-job-form" novalidate hidden><label>Application label<input id="new-job-label" required maxlength="120" placeholder="e.g. Climate software"></label><p id="new-job-error" role="alert"></p><div><button type="submit">Create application</button><button id="cancel-new-job" type="button">Cancel</button></div></form><p class="muted">One story. Many opportunities.</p><div id="job-list"></div><div class="profile-card"><strong>▣ Your experience chest</strong><p id="profile-summary"></p><small>Materials stay available while this page is open.</small></div></aside>
       <main class="application-panel">
@@ -147,6 +149,7 @@
     </div>
   </section>
   <script src="workspace.js" defer></script>
+  <script src="noticeboard.js" defer></script>
   <script src="workshop.js" defer></script>
 </body>
 </html>

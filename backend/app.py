@@ -1,9 +1,10 @@
 """Local-only HTTP bridge. Run with one Uvicorn worker, without --reload."""
 from contextlib import asynccontextmanager
 import os
+from pathlib import Path as PathFile
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Query, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -14,6 +15,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from .backgrounds import UploadBodyLimit
 
 from .runner import BusyError, Runner
+from dotenv import load_dotenv
+
+from .jobs import JobBoard
 
 
 class GenerationRequest(BaseModel):
@@ -31,8 +35,10 @@ class GenerationRequest(BaseModel):
         return value
 
 
-def create_app(runner=None):
+def create_app(runner=None, jobs=None):
+    load_dotenv(PathFile(__file__).resolve().parent.parent / '.env', override=False)
     runner = runner or Runner()
+    jobs = jobs or JobBoard()
     origins = [s.strip() for s in os.environ.get('RESUME_FRONTEND_ORIGINS', '').split(',') if s.strip()]
     if '*' in origins or 'null' in origins:
         raise ValueError('Configure explicit frontend origins, not * or null')
@@ -56,6 +62,27 @@ def create_app(runner=None):
             return JSONResponse({'detail': 'Origin is not allowed'}, status_code=403)
         return await call_next(request)
 
+    @app.get('/api/jobs/categories')
+    async def job_categories():
+        return await jobs.categories()
+
+    @app.get('/api/jobs')
+    async def search_jobs(request: Request, query: str = Query(..., min_length=1, max_length=300),
+                          location: str = Query('', max_length=120),
+                          remote: bool = Query(False), page: int = Query(1)):
+        if not query.strip():
+            raise HTTPException(422, 'Query must not be blank')
+        if not jobs.allow_request(request.client.host if request.client else 'local'):
+            raise HTTPException(429, 'Too many job searches. Try again in one minute.', headers={'Retry-After': '60'})
+        return await jobs.search(query, location, remote, page)
+
+    @app.get('/api/jobs/{ident}')
+    async def job_detail(ident: str = Path(pattern=r'^(?:j-[a-f0-9]{32}|sample-[0-9]{2})$')):
+        try:
+            return await jobs.detail(ident)
+        except KeyError:
+            raise HTTPException(404, 'Job is unavailable. Refresh the noticeboard or check the source site.')
+
     @app.post('/api/backgrounds', status_code=201, openapi_extra={
         'requestBody': {'required': True, 'content': {'multipart/form-data': {'schema': {
             'type': 'object', 'required': ['resume'], 'properties': {
@@ -64,16 +91,16 @@ def create_app(runner=None):
                 'photo': {'type': 'string', 'format': 'binary'}}}}}}})
     async def upload_background(request: Request):
         if not request.headers.get('content-type', '').lower().startswith('multipart/form-data'):
-            raise HTTPException(415, '请使用 multipart/form-data 上传文件。')
+            raise HTTPException(415, 'Upload files using multipart/form-data.')
         async with request.form(max_files=7, max_fields=3) as form:
             if any(key not in ('resume', 'background_files', 'photo') for key in form):
-                raise HTTPException(422, '只接受 resume、background_files 和 photo 字段。')
+                raise HTTPException(422, 'Only the resume, background_files and photo upload fields are accepted.')
             resumes, photos = form.getlist('resume'), form.getlist('photo')
             backgrounds = form.getlist('background_files')
             if len(resumes) != 1 or len(photos) > 1:
-                raise HTTPException(422, '必须上传一份主简历，头像最多一张。')
+                raise HTTPException(422, 'Upload exactly one resume and at most one personal photo.')
             if not all(isinstance(file, UploadFile) for file in resumes + photos + backgrounds):
-                raise HTTPException(422, '上传字段必须是文件。')
+                raise HTTPException(422, 'Upload fields must contain files.')
             return await runner.backgrounds.create(resumes[0], backgrounds, photos[0] if photos else None)
 
     @app.post('/api/generations', status_code=202)
@@ -81,25 +108,35 @@ def create_app(runner=None):
         try:
             return runner.submit(body.company, body.job_description, body.background_id)
         except BusyError:
-            raise HTTPException(409, '已有任务运行中，请稍后提交。')
+            raise HTTPException(409, 'A task is already running. Try submitting again later.')
 
     @app.get('/api/generations/{ident}')
     async def status(ident: str):
         try:
             return runner.public(ident)
         except KeyError:
-            raise HTTPException(404, '任务不存在，或服务已重启。')
+            raise HTTPException(404, 'The task is unavailable or the backend restarted.')
 
     @app.get('/api/generations/{ident}/files/{kind}')
     async def download(ident: str, kind: Literal['ats_resume', 'professional_resume', 'professional_cover_letter']):
         try:
             path = runner.download(ident, kind)
         except KeyError:
-            raise HTTPException(404, '任务或经过验证的文件不存在。')
+            raise HTTPException(404, 'The task or validated file is unavailable.')
         except BusyError:
-            raise HTTPException(409, '任务尚未成功，文件不可下载。')
+            raise HTTPException(409, 'The task has not completed successfully. Files are not available for download.')
         return FileResponse(path, filename=path.name,
             media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+
+    @app.get('/api/generations/{ident}/previews/{kind}')
+    async def preview(ident: str, kind: Literal['ats_resume', 'professional_resume', 'professional_cover_letter']):
+        try:
+            path = runner.preview(ident, kind)
+        except KeyError:
+            raise HTTPException(404, 'Verified task preview is unavailable.')
+        except BusyError:
+            raise HTTPException(409, 'Only successful tasks have published previews.')
+        return FileResponse(path, media_type='image/png', headers={'Cache-Control': 'no-store'})
 
     return app
 

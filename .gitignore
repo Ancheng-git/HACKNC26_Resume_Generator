@@ -1,0 +1,31 @@
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+node_modules/
+
+# User-supplied personal inputs — never commit
+reference/photo.jpg
+/professional_*.json
+/cover_professional_*.json
+
+# Personal resume sources and generated application content
+/reference/core-resume.docx
+/reference/background-notes.md
+/reference/style-examples/*
+!/reference/style-examples/.gitkeep
+/output/*
+!/output/.gitkeep
+/keywords_*.json
+
+# Local HTTP backend environment and private task artifacts
+/backend/.venv/
+/backend/runs/
+/backend/backgrounds/
+
+# Backend-only secrets
+.env
+
+# Personal generated example documents
+/output_sample/*
+!/output_sample/.gitkeep

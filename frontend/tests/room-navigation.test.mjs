@@ -63,7 +63,7 @@ test('spawn, intro route, doorway and interaction destinations are unchanged', (
   assert.ok(Math.abs(routeLength(outdoorRoute) / introWalkSpeed - 2.75) < 0.01, 'Opening walk takes about 2.75 s');
   assert.deepEqual(indoorRoute.at(-1), [4.19, 0.49, -1.04]);
   assert.deepEqual(doorway, { inside: [3.85, 1.1], outside: [3.85, 3.6], threshold: [3.85, 1.92] });
-  assert.deepEqual(interactionPoints, { chest: [0.8, 0.9], table: [3.75, -1.9], board: [3.75, -1.1], furnace: [4.45, 0.55], anvil: [3.8, 0.8] });
+  assert.deepEqual(interactionPoints, { chest: [2, -0.1], table: [3.75, -1.9], board: [3.75, -1.1], furnace: [4.45, 0.55] });
   const navigation = new IslandNavigation();
   for (const point of [...Object.values(interactionPoints), doorway.inside, doorway.outside, ...outdoorRoute.map(([x, , z]) => [x, z])]) assert.ok(navigation.valid(point), `${point} stays clear`);
   for (const { x, z } of scenery.trees) assert.ok(Math.abs(x) > 9 || Math.abs(z) > 6, 'New trees stay out of the core, routes and approaches');

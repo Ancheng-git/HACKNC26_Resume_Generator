@@ -2,10 +2,22 @@
 const workshopDialog = document.querySelector('#workshop-dialog');
 const workshopBody = document.querySelector('#workshop-panel-body');
 let workshopPanel = null, workshopReturnFocus = null, workshopRestore = null;
-const workshopTitles = { chest: 'Materials chest · Your materials', table: 'Workbench · Applications', board: 'Noticeboard · Green careers', furnace: 'Furnace · Generation tasks', anvil: 'Anvil · Model settings' };
+let workshopCleanup = null;
+let workshopNoticeTimer = null;
+let furnaceGuideTimer = null;
+const furnaceGuide = document.querySelector('#furnace-guide');
+const workshopTitles = { chest: 'Materials chest · Your materials', table: 'Workbench · Applications', board: 'Noticeboard · Job search', furnace: 'Furnace · Generation tasks' };
+
+function hideFurnaceGuide() {
+  clearTimeout(furnaceGuideTimer);
+  furnaceGuideTimer = null;
+  furnaceGuide.hidden = true;
+}
 
 function closeWorkshop() {
   if (!workshopPanel) return;
+  workshopCleanup?.();
+  workshopCleanup = null;
   if (workshopPanel === 'chest') setChestOpen(false);
   if (workshopRestore) {
     const { element, parent, sibling } = workshopRestore;
@@ -31,15 +43,16 @@ function openWorkshop(kind, trigger) {
     workshopBody.append(element);
     element.hidden = false;
     if (kind === 'table') ensureApplication();
-  } else if (kind === 'board' || kind === 'anvil') {
+  } else if (kind === 'board') {
     workshopBody.append(document.querySelector(`#${kind}-content`).content.cloneNode(true));
+    if (kind === 'board') workshopCleanup = mountNoticeboard(workshopBody);
   } else {
     const list = document.createElement('div');
     list.id = 'furnace-tasks'; list.className = 'workshop-info'; list.setAttribute('aria-live', 'polite');
     workshopBody.append(list);
     renderFurnace(furnaceState());
   }
-  workshopDialog.classList.toggle('wide', kind === 'table');
+  workshopDialog.classList.toggle('wide', kind === 'table' || kind === 'board');
   workshopDialog.showModal();
   document.dispatchEvent(new CustomEvent('workshop-panel', { detail: { open: true, kind } }));
   if (kind === 'chest') setChestOpen(true);
@@ -69,14 +82,43 @@ function renderFurnace(summary) {
 }
 window.workshop = {
   get active() { return workshopPanel; }, open: openWorkshop, close: closeWorkshop,
+  generating() {
+    if (workshopPanel !== 'table') return;
+    closeWorkshop();
+    hideFurnaceGuide();
+    furnaceGuide.hidden = false;
+    furnaceGuideTimer = setTimeout(hideFurnaceGuide, 4000);
+  },
+  completed(application) {
+    // Do not interrupt an open materials/search panel or a different application.
+    if (document.querySelector('#eco-scene').hidden || workshopPanel) return;
+    selectedApplication = application;
+    document.querySelector('#job-title').value = application.title;
+    document.querySelector('#job-description').value = application.description;
+    openWorkshop('table');
+    renderApplications();
+    renderDocument();
+    document.querySelector('.documents-panel').scrollIntoView?.({ block: 'start' });
+    document.querySelector(`[data-document="${documentType}"]`).focus({ preventScroll: true });
+  },
   uploaded(pack) {
     const warnings = document.querySelector('#upload-warnings').textContent;
-    document.querySelector('#workshop-notice').textContent = `Materials uploaded successfully.${warnings ? ` Note: ${warnings}` : ''}`;
+    const notice = document.querySelector('#workshop-notice');
+    clearTimeout(workshopNoticeTimer);
+    notice.textContent = `Materials uploaded successfully.${warnings ? ` Note: ${warnings}` : ''}`;
+    workshopNoticeTimer = setTimeout(() => {
+      notice.textContent = '';
+      workshopNoticeTimer = null;
+    }, 4000);
     closeWorkshop();
   },
 };
 document.querySelectorAll('[data-workshop]').forEach(button => button.addEventListener('click', () => (window.workshop.request || openWorkshop)(button.dataset.workshop, button)));
 document.querySelector('#workshop-close').addEventListener('click', closeWorkshop);
 workshopDialog.addEventListener('cancel', event => { event.preventDefault(); closeWorkshop(); });
-document.addEventListener('workshop-tasks', event => renderFurnace(event.detail));
+document.addEventListener('workshop-tasks', event => {
+  renderFurnace(event.detail);
+  if (!event.detail.lit) hideFurnaceGuide();
+});
+hideFurnaceGuide();
 renderFurnace(furnaceState());

@@ -16,7 +16,7 @@ createServer(async (req, res) => {
   const pathname = new URL(req.url, 'http://localhost:5175').pathname;
   if (pathname === '/api/backgrounds' && req.method === 'POST') {
     for await (const chunk of req) { /* Consume fixture multipart, never parse personal documents. */ }
-    return json(res, 200, { background_id: 'SIMULATED-background', ready_for_generation: true, warnings: ['qa-resume.doc 已提取文字；多栏顺序可能变化，原文件已保留供核对。'] });
+    return json(res, 200, { background_id: 'SIMULATED-background', ready_for_generation: true, warnings: ['qa-resume.doc \u5df2\u63d0\u53d6\u6587\u5b57；\u591a\u680f\u987a\u5e8f\u53ef\u80fd\u53d8\u5316，\u539f\u6587\u4ef6\u5df2\u4fdd\u7559\u4f9b\u6838\u5bf9。'] });
   }
   if (pathname === '/api/generations' && req.method === 'POST') {
     let body = ''; for await (const chunk of req) body += chunk;
@@ -35,7 +35,7 @@ createServer(async (req, res) => {
     const status = elapsed < 4 ? 'queued' : elapsed < 24 ? 'running' : task.fail ? 'failed' : 'succeeded';
     const stage = elapsed < 4 ? 'queued' : elapsed < 8 ? 'preparing' : elapsed < 18 ? 'generating' : elapsed < 24 ? 'validating' : task.fail ? 'failed' : 'completed';
     const files = Object.fromEntries(['professional_resume', 'ats_resume', 'professional_cover_letter'].map(kind => [kind, { name: `${kind}.docx`, url: `/api/generations/${id}/files/${kind}` }]));
-    return json(res, 200, { id, status, stage, error: status === 'failed' ? '任务超时，已终止生成进程。' : null, ...(status === 'succeeded' ? { files, warnings: ['SIMULATED generation warning'] } : {}) });
+    return json(res, 200, { id, status, stage, error: status === 'failed' ? '\u4efb\u52a1\u8d85\u65f6，\u5df2\u7ec8\u6b62\u751f\u6210\u8fdb\u7a0b。' : null, ...(status === 'succeeded' ? { files, warnings: ['SIMULATED generation warning'] } : {}) });
   }
   const path = resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
   if (!path.startsWith(root + sep)) return json(res, 403, {});

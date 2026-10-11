@@ -75,11 +75,15 @@ function renderDocument() {
   preview.replaceChildren();
   document.querySelectorAll('[data-document]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.document === documentType)));
   $('#application-title').textContent = selectedApplication ? selectedApplication.label : 'Where will your story go next?';
+  let source = document.querySelector('#job-source');
+  if (!source) { source = document.createElement('p'); source.id = 'job-source'; $('#job-error').before(source); }
+  source.textContent = selectedApplication?.company ? `Company: ${selectedApplication.company} · Imported from ${selectedApplication.source || 'JSearch'}. Title is the role name; review the full job description before generating.` : '';
   $('#document-status').textContent = selectedApplication ? taskText(selectedApplication) : 'Draft';
   const message = document.createElement('p');
-  message.className = 'document-empty';
+  message.className = selectedApplication?.status === 'succeeded' || selectedApplication?.status === 'failed' ? 'document-result' : 'document-empty';
   message.textContent = selectedApplication?.error || (selectedApplication?.status === 'succeeded' ? 'Your documents are ready.' : 'Add a job description and generate your application.');
   preview.append(message);
+  if (selectedApplication?.status === 'failed') renderFailure(preview, selectedApplication.failure);
   if (selectedApplication?.warnings) {
     const warning = document.createElement('p');
     warning.textContent = englishMessage(selectedApplication.warnings, 'The backend reported a generation warning. Review the generated documents.');
@@ -119,19 +123,67 @@ function renderDocument() {
       finally { download.busy = false; update(); }
     });
     preview.append(feedback);
+    const imageFeedback = document.createElement('p');
+    imageFeedback.className = 'document-preview-feedback';
+    let previewURL;
+    try { previewURL = file.preview_url ? new URL(file.preview_url, API_BASE) : null; } catch { previewURL = null; }
+    if (previewURL?.origin === new URL(API_BASE).origin) {
+      const image = document.createElement('img');
+      image.className = 'document-page';
+      image.alt = `${{resume: 'Professional resume', ats: 'ATS resume', letter: 'Professional cover letter'}[documentType]} — generated document preview`;
+      image.decoding = 'async';
+      image.addEventListener('error', () => { image.hidden = true; imageFeedback.textContent = 'Preview unavailable. You can still download the verified DOCX above.'; });
+      image.src = previewURL.href;
+      preview.append(image);
+    } else {
+      imageFeedback.textContent = 'Preview unavailable for this task. You can download the DOCX above.';
+    }
+    preview.append(imageFeedback);
   }
+}
+
+function renderFailure(preview, failure) {
+  const section = document.createElement('section'); section.className = 'generation-feedback';
+  const text = (tag, value) => { const node = document.createElement(tag); node.textContent = value; section.append(node); };
+  text('h3', 'Why generation failed');
+  text('p', failure?.summary || 'Detailed feedback is unavailable. Check the local backend task report and logs before retrying.');
+  const checks = failure?.checks;
+  if (checks && checks.composite_score != null) {
+    text('p', `ATS score: ${checks.composite_score}/100 (required: 80) · Required keyword coverage: ${checks.must_have_pct ?? 'Unavailable'}% (required: 90%) · Recorded review passes: ${checks.revision_passes ?? 'Unavailable'}/3`);
+  }
+  text('h4', 'Report summary');
+  if (failure?.report_summary?.length) {
+    const list = document.createElement('ul');
+    failure.report_summary.forEach(finding => { const item = document.createElement('li'); item.textContent = finding; list.append(item); });
+    section.append(list);
+    text('p', 'Report findings should be checked against your actual background; missing keywords do not automatically mean missing skills.');
+  } else {
+    text('p', failure?.report_available ? 'The report did not contain a usable gap summary.' : 'No workflow report was available for this task. The failure may have occurred before a report could be written.');
+  }
+  if (failure?.focus_areas?.length) {
+    text('h4', 'Recommended next steps');
+    const list = document.createElement('ul');
+    failure.focus_areas.forEach(focus => {
+      const item = document.createElement('li'), area = document.createElement('strong'), action = document.createElement('p');
+      area.textContent = focus.area; action.textContent = focus.action;
+      item.append(area, action); list.append(item);
+    });
+    section.append(list);
+  }
+  preview.append(section);
 }
 
 async function pollApplication(application) {
   if (application.polling) return;
   application.polling = true;
   const taskId = application.taskId;
+  const previousStatus = application.status;
   const controller = new AbortController();
   application.controller = controller;
   try {
     const data = await readResponse(await fetch(`${API_BASE}/api/generations/${encodeURIComponent(taskId)}`, { signal: controller.signal }));
     if (controller.signal.aborted || application.taskId !== taskId) return;
-    Object.assign(application, { status: data.status, stage: data.stage, files: data.files, ats: data.ats, warnings: data.warnings, error: data.error ? englishMessage(data.error, 'Generation failed. Check the backend task logs before trying again.') : '' });
+    Object.assign(application, { status: data.status, stage: data.stage, files: data.files, ats: data.ats, warnings: data.warnings, failure: data.failure || null, error: data.error ? englishMessage(data.error, 'Generation failed. Check the backend task logs before trying again.') : '' });
     if (application.status === 'queued' || application.status === 'running') application.timer = setTimeout(() => pollApplication(application), 2000);
   } catch (error) {
     if (controller.signal.aborted || application.taskId !== taskId || error.name === 'AbortError') return;
@@ -143,6 +195,7 @@ async function pollApplication(application) {
   }
   renderApplications();
   if (selectedApplication === application) renderDocument();
+  if (application.status !== previousStatus && ['succeeded', 'failed'].includes(application.status)) window.workshop?.completed?.(application);
 }
 
 $('#job-form').addEventListener('submit', async (event) => {
@@ -156,18 +209,22 @@ $('#job-form').addEventListener('submit', async (event) => {
   if (!state.backgroundId) { $('#job-error').textContent = 'Upload your personal materials in the experience chest before generating.'; $('#edit-profile').focus(); return; }
   if (!selectedApplication && !createApplication()) return;
   const application = selectedApplication;
+  const company = application.company || title;
+  const jobDescription = application.company ? `${title}\nCompany: ${company}\n\n${description}` : description;
+  if (company.length > 120 || jobDescription.length > 50000) { $('#job-error').textContent = 'Company must be at most 120 characters and the complete job description at most 50,000 characters. Review the imported details.'; return; }
   if (application.taskId && application.status === 'Status unavailable') { pollApplication(application); return; }
   if (applications.some(item => ['submitting', 'queued', 'running'].includes(item.status))) return;
-  Object.assign(application, { title, description, status: 'submitting', stage: null, taskId: null, error: '', files: null, ats: null, warnings: null, downloads: {} });
+  Object.assign(application, { title, description, status: 'submitting', stage: null, taskId: null, error: '', files: null, ats: null, warnings: null, failure: null, downloads: {} });
   renderApplications();
   renderDocument();
   try {
     const data = await readResponse(await fetch(`${API_BASE}/api/generations`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ company: title, job_description: description, background_id: state.backgroundId }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ company, job_description: jobDescription, background_id: state.backgroundId }),
     }));
     if (typeof data.id !== 'string' || !data.id.trim()) throw new Error('The backend did not return a valid task ID.');
     application.taskId = data.id;
     application.status = data.status || 'queued';
+    window.workshop?.generating?.();
     pollApplication(application);
   } catch (error) {
     application.status = 'Submission failed';
@@ -185,6 +242,17 @@ function createApplication(label = $('#new-job-label').value) {
   renderDocument();
   $('#job-title').focus();
   return true;
+}
+function importJobApplication(job, generate = false) {
+  createApplication(`${job.company} · ${job.title}`);
+  Object.assign(selectedApplication, { company: job.company, title: job.title, description: job.description, source: job.source });
+  $('#job-title').value = job.title;
+  $('#job-description').value = job.description;
+  window.workshop.open('table');
+  renderApplications();
+  renderDocument();
+  // The existing submit handler still owns validation, locking, polling and downloads.
+  if (generate) $('#job-form').requestSubmit();
 }
 $('#new-job').addEventListener('click', () => {
   $('#new-job-error').textContent = '';
