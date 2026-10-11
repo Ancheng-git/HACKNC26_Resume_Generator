@@ -13,6 +13,8 @@ npm run dev
 
 Open **http://localhost:5173**. Edit `src/` and refresh the browser; the server has no hot reload. Stop it with Ctrl+C. Follow the [root README](../README.md) to install and run the backend on port 8000.
 
+The frontend also runs in native Windows PowerShell: use `npm.cmd ci` and `npm.cmd run dev` from this directory to avoid execution-policy errors from `npm.ps1`. For the complete application on Windows, run both servers and install all dependencies inside **WSL2 Ubuntu** as described in the [root Windows guide](../README.md#windows-prepare-wsl2). The backend is not supported in native PowerShell/CMD.
+
 ```bash
 node --test tests/*.test.mjs
 npm run build
@@ -25,7 +27,9 @@ Preview serves `dist/` on port 5173, so stop development before starting preview
 
 WASD and arrows move the character; Shift runs and Ctrl crouches. Click the ground to walk, or an object to approach it. E/Enter interacts with nearby objects, and Esc cancels travel or closes a dialog. The doorway connects the interior and island without clearing materials or drafts.
 
-The upper-right menu controls graphics, reduced motion, view range, screenshots and sound. Background music starts after a user gesture and loops at low volume. Sound controls both music and effects; hidden tabs pause audio. The BGM is the user-supplied Minecraft track in `src/assets/audio/background.mp3`; the interaction effects are original local WAV files.
+The upper-right menu controls graphics, reduced motion, view range, screenshots, recording and sound. Background music starts after a user gesture and loops at low volume. Sound controls both music and effects; hidden tabs pause audio. Footsteps use wood sounds indoors and grass sounds outdoors, at a lower volume than the other interaction effects. The BGM is the user-supplied Minecraft track in `src/assets/audio/background.mp3`; the interaction effects are original local WAV files. Dialogs, settings and cursors share the pixel visual style.
+
+Recording uses browser display-capture and MediaRecorder APIs with a current-tab identity check. Use a supported browser such as Chrome or Edge, choose the current MineJob tab and share tab audio if wanted. The recorder rejects full-screen, window and other-tab capture. Stopping downloads a WebM video, or MP4 when the browser selects that fallback; the format depends on browser support. Actual recording export has not yet been verified through the browser's capture chooser.
 
 Skip intro stops at the doorway; direct entry opens the interior immediately. Reduced motion skips automatic travel. `?motion=reduce`, `?quality=low` and `?view=2d` select reduced motion, lower graphics cost and the form fallback. Forms remain accessible when WebGL is unavailable.
 
@@ -50,6 +54,7 @@ Materials, drafts and selected applications live in page memory. Reloading clear
 | `src/workshop.js`, `src/workspace.js` | Dialogs, drafts, generation and document results |
 | `src/noticeboard.js`, `src/api.js` | Job search and HTTP requests |
 | `src/scene-audio.js`, `src/assets/audio/` | Music, interaction effects and mute control |
+| `src/scene-recorder.js` | Current-tab recording and local video download |
 | `tools/` | Local server, build and dependency preparation |
 
 Dev/build copy pinned Three.js modules and their MIT license into ignored `src/vendor/`. Google Fonts use Arial/monospace fallbacks when offline. Original image assets remain for the form view; the 3D world uses procedural geometry and textures.

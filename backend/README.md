@@ -4,6 +4,8 @@ FastAPI connects the browser to the existing local Claude Code workflow and docu
 
 Run from the project root with **one Uvicorn worker and no `--reload`**. Claude Code must be installed and signed in under the same system user. The backend uses the existing login rather than a new model API key. Node dependencies, Python document libraries and LibreOffice are required for generation and validation.
 
+On Windows, run the backend in **WSL2 Ubuntu** and install Python, Node.js, LibreOffice and Claude Code inside that distribution. The current runner uses Unix process groups (`os.killpg`) and directory symlinks; native PowerShell/CMD is not a supported backend setup. Follow the [Windows setup and startup instructions](../README.md#windows-prepare-wsl2). WSL2 deployment has not been verified end to end on a Windows machine.
+
 ## Configuration
 
 Copy `.env.example` to the root `.env` on a fresh checkout. Existing environment variables take precedence. Do not put secrets in frontend code or commit `.env`.
@@ -104,7 +106,7 @@ The backend binds to loopback and validates hosts and origins. It is intended fo
 
 ## Tests
 
-From the root, after installing the normal dependencies and LibreOffice:
+From the root in macOS, Linux or WSL2 Ubuntu, after installing the normal dependencies and LibreOffice:
 
 ```bash
 backend/.venv/bin/python -m pip install httpx
