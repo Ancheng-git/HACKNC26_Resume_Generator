@@ -7,3 +7,5 @@ pymupdf>=1.24,<2
 Pillow>=10,<13
 certifi>=2024.8.30
 python-dotenv>=1,<2
+tzdata; sys_platform == "win32"
+psycopg[binary]>=3.2,<4

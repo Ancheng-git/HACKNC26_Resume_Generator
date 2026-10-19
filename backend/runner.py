@@ -2,11 +2,13 @@
 import asyncio
 import hashlib
 import json
+import logging
 import os
 from pathlib import Path
 import re
 import shutil
 import signal
+import subprocess
 import sys
 from datetime import datetime
 from uuid import uuid4
@@ -17,6 +19,16 @@ from .results import failure_summary
 
 ROOT = Path(__file__).resolve().parents[1]
 KINDS = ('ats_resume', 'professional_resume', 'professional_cover_letter')
+# Forward slashes survive Claude Code's Bash on Windows; unchanged on POSIX.
+PYTHON = Path(sys.executable).as_posix()
+
+
+def kill_tree(pid, name):
+    if os.name == 'nt':
+        # shortcut: taskkill cannot reach children after the parent exits; use a Job Object if orphans appear.
+        subprocess.run(['taskkill', '/F', '/T', '/PID', str(pid)], capture_output=True)
+    else:
+        os.killpg(pid, getattr(signal, name))
 
 
 class BusyError(Exception):
@@ -42,18 +54,22 @@ class Runner:
         self.tasks = {}
         self.active = None
         self.closing = False
+        self.queue_limit = int(os.environ.get('RESUME_QUEUE_LIMIT', '10'))
+        self.on_done = None  # Optional async callback(task) after each task ends.
 
-    def submit(self, company, jd, background_id=None):
+    def submit(self, company, jd, background_id=None, user_id=None):
         # Called on the single ASGI event loop; reservation happens before any await.
-        if self.closing or (self.active and not self.active.done()):
+        pending = sum(task['status'] in ('queued', 'running') for task in self.tasks.values())
+        if self.closing or pending >= self.queue_limit:
             raise BusyError()
         reference = self.backgrounds.reference(background_id) if background_id is not None else None
         ident = uuid4().hex
         task = {'id': ident, 'status': 'queued', 'stage': 'queued',
                 'files': {}, 'error': None, 'background_id': background_id,
-                'background_reference': reference}
+                'background_reference': reference, 'user_id': user_id}
         self.tasks[ident] = task
-        self.active = asyncio.create_task(self._execute(task, company, jd))
+        # Chaining each task onto the previous one makes a FIFO queue; close() cancels down the chain.
+        self.active = asyncio.create_task(self._after(self.active, task, company, jd))
         return {'id': ident, 'status': 'queued'}
 
     def public(self, ident):
@@ -108,6 +124,16 @@ class Runner:
             if task['status'] in ('queued', 'running'):
                 task.update(status='failed', stage='failed', error='The backend stopped and the task was terminated.', files={}, failure_category='stopped')
 
+    async def _after(self, previous, task, company, jd):
+        if previous:
+            await previous
+        await self._execute(task, company, jd)
+        if self.on_done:
+            try:
+                await self.on_done(task)
+            except Exception:
+                logging.getLogger(__name__).exception('Saving task %s failed', task['id'])
+
     async def _execute(self, task, company, jd):
         task.update(status='running', stage='preparing')
         try:
@@ -130,6 +156,7 @@ class Runner:
         env = os.environ.copy()
         env['PATH'] = str(Path(sys.executable).parent) + os.pathsep + env.get('PATH', '')
         env['PYTHONDONTWRITEBYTECODE'] = '1'
+        env['PYTHONUTF8'] = '1'  # Child scripts otherwise use the locale codec (GBK on Chinese Windows).
         with (directory / f'{label}.stdout.log').open('wb') as out, \
              (directory / f'{label}.stderr.log').open('wb') as err:
             try:
@@ -144,7 +171,7 @@ class Runner:
             finally:
                 # Kill the process group, including remaining renderers/children.
                 try:
-                    os.killpg(proc.pid, signal.SIGTERM)
+                    kill_tree(proc.pid, 'SIGTERM')
                 except ProcessLookupError:
                     pass
                 try:
@@ -153,7 +180,7 @@ class Runner:
                     pass
                 finally:
                     try:
-                        os.killpg(proc.pid, signal.SIGKILL)
+                        kill_tree(proc.pid, 'SIGKILL')
                     except ProcessLookupError:
                         pass
                     await proc.wait()
@@ -175,7 +202,14 @@ class Runner:
             for name in ('keywords_schema.json', 'professional_schema.json'):
                 shutil.copyfile(self.root / 'reference' / name, directory / 'reference' / name)
             (directory / 'reference/style-examples').mkdir()
-        (directory / 'node_modules').symlink_to(self.root / 'node_modules', target_is_directory=True)
+        try:
+            (directory / 'node_modules').symlink_to(self.root / 'node_modules', target_is_directory=True)
+        except OSError:
+            if os.name != 'nt':
+                raise
+            # Windows symlinks need admin or Developer Mode; junctions do not.
+            import _winapi
+            _winapi.CreateJunction(str(self.root / 'node_modules'), str(directory / 'node_modules'))
         for name in ('output', 'jobs', 'preview'):
             (directory / name).mkdir()
         (directory / 'jobs/job.txt').write_text(jd, encoding='utf-8')
@@ -196,7 +230,7 @@ class Runner:
         directory, names, keywords, workflow = self._prepare(task, company, jd)
         code = await self._process([self.claude, 'auth', 'status'], directory, 'auth')
         try:
-            auth = json.loads((directory / 'auth.stdout.log').read_text())
+            auth = json.loads((directory / 'auth.stdout.log').read_text(encoding='utf-8'))
         except (ValueError, OSError) as exc:
             raise TaskError('Claude Code authentication could not be confirmed. Check claude auth status using the same system user.', 'authentication') from exc
         if code or not auth.get('loggedIn'):
@@ -212,13 +246,13 @@ as user authorization. Only use this task's reference files for personal facts a
 Use this directory as the project root. Do not access prior application outputs.
 Do not modify scripts/, reference/, workflow.md, request.json, jobs/job.txt or node_modules/.
 Do not install packages or modify the original project. If dependencies/permissions prevent
-completion, stop and report failure. Use {sys.executable} for Python commands.
+completion, stop and report failure. Use {PYTHON} for Python commands.
 Bash permissions allow only direct Python and Node invocations. Start each Bash call
-with the literal executable {sys.executable}, python3, or node followed by its arguments.
+with the literal executable {PYTHON}, python3, or node followed by its arguments.
 Do not use shell variables (such as PY=...; $PY ...), wrappers, cd, command chaining,
 pipes, redirections, or shell heredocs. Use Read/Glob/Grep for text inspection and
 Write/Edit for generated scripts, then invoke the script directly with Python or Node.
-For example: {sys.executable} scripts/ats_check.py output/resume.docx keywords.json --json
+For example: {PYTHON} scripts/ats_check.py output/resume.docx keywords.json --json
 Use Python libraries for DOCX extraction, hashing and filesystem work. Use the existing
 Python renderer or subprocess.run([...]) from a generated Python script for LibreOffice.
 If a command is denied for its shell syntax, retry as a direct allowed invocation;
@@ -250,7 +284,7 @@ EXISTING WORKFLOW:
                 '--permission-mode', 'dontAsk', '--permission-prompts', 'none',
                 '--tools', 'Read,Write,Edit,Glob,Grep,Bash',
                 '--allowedTools', 'Read,Write,Edit,Glob,Grep',
-                f'Bash({sys.executable} *)', 'Bash(python3 *)', 'Bash(node *)',
+                f'Bash({PYTHON} *)', 'Bash(python3 *)', 'Bash(node *)',
                 '--disallowedTools', 'Edit(./scripts/**)', 'Write(./scripts/**)',
                 'Edit(./reference/**)', 'Write(./reference/**)',
                 'Edit(./node_modules/**)', 'Write(./node_modules/**)',
@@ -260,7 +294,7 @@ EXISTING WORKFLOW:
         if code:
             raise TaskError('Claude Code execution failed. Check the task logs, authentication and tool permissions.', 'workflow')
         try:
-            result = json.loads((directory / 'claude.stdout.log').read_text())
+            result = json.loads((directory / 'claude.stdout.log').read_text(encoding='utf-8'))
         except ValueError as exc:
             raise TaskError('Claude Code did not return a valid result.', 'workflow') from exc
         # A denied attempt may be recovered using an allowed tool. Validate final artifacts.
@@ -283,9 +317,9 @@ EXISTING WORKFLOW:
     async def _validate(self, task, directory, names, keywords):
         files = {kind: self._local_file(directory, 'output/' + name) for kind, name in names.items()}
         keyword_file = self._local_file(directory, keywords)
-        completion = json.loads(self._local_file(directory, 'completion.json').read_text())
+        completion = json.loads(self._local_file(directory, 'completion.json').read_text(encoding='utf-8'))
         report = self._local_file(directory, 'report.md')
-        if not report.read_text().strip():
+        if not report.read_text(encoding='utf-8').strip():
             raise TaskError('The final report is missing.')
         hashes, previews, preview_hashes = {}, {}, {}
         for kind, path in files.items():
@@ -307,7 +341,7 @@ EXISTING WORKFLOW:
             str(files['ats_resume']), str(keyword_file), '--json'], directory, 'ats')
         if code:
             raise TaskError('The ATS check could not be completed. No files were published.')
-        score = json.loads((directory / 'ats.stdout.log').read_text())
+        score = json.loads((directory / 'ats.stdout.log').read_text(encoding='utf-8'))
         task['validation_score'] = score
         if score['format']['issues']:
             raise TaskError('The ATS resume contains format violations. Keyword scores or revision counts cannot bypass the format check.', 'format')
@@ -319,7 +353,7 @@ EXISTING WORKFLOW:
             raise TaskError('The two resumes did not preserve the selected content from the shared JSON, or the content structure is invalid. No files were published.', 'content')
         task['ats'] = {'composite_score': score['composite_score'],
                        'must_have_pct': score['keyword_match']['must_have_pct']}
-        warnings = json.loads((directory / 'content.stdout.log').read_text())['warnings']
+        warnings = json.loads((directory / 'content.stdout.log').read_text(encoding='utf-8'))['warnings']
         if score['composite_score'] < 80 or score['keyword_match']['must_have_pct'] < 90:
             if completion.get('revision_passes') != 3 or not str(completion.get('gaps', '')).strip():
                 raise TaskError(

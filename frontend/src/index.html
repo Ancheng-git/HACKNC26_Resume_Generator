@@ -149,6 +149,20 @@
       </main>
     </div>
   </section>
+  <dialog id="account-dialog" class="workshop-dialog account-dialog" aria-labelledby="account-title">
+    <form id="account-form">
+      <small>WELCOME TO MINEJOB</small>
+      <h2 id="account-title">Sign in to craft your applications</h2>
+      <label>Email <input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+      <label>Password <input name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128"></label>
+      <p id="account-status" role="status"></p>
+      <div class="account-actions">
+        <button class="primary-action" type="submit" value="login">Sign in</button>
+        <button type="submit" value="register">Create account</button>
+      </div>
+    </form>
+  </dialog>
+  <script src="account.js" defer></script>
   <script src="workspace.js" defer></script>
   <script src="noticeboard.js" defer></script>
   <script src="workshop.js" defer></script>

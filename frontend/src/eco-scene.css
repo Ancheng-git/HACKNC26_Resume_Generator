@@ -244,3 +244,11 @@ body, .eco-canvas canvas { cursor: var(--pixel-arrow); }
 :is(button, a[href], summary, .drop-zone, .file-picker, input[type=checkbox]):not(:disabled), #scene-options :is(button, summary, a[href]):not(:disabled) { cursor: var(--pixel-pointer); }
 .eco-canvas canvas[style*="cursor: pointer"] { cursor: var(--pixel-pointer) !important; }
 :is(input:not([type]), input[type=text], input[type=search], textarea) { cursor: var(--pixel-text); }
+
+.account-dialog form { display: grid; gap: 14px; padding: 24px; }
+.account-dialog h2 { margin: 0; font-size: 20px; }
+.account-dialog label { display: grid; gap: 6px; font-weight: 700; }
+.account-dialog input { padding: 10px; border: 2px solid #39372e; background: #fff8e8; font: inherit; }
+.account-dialog #account-status { min-height: 1.2em; margin: 0; color: #8a2b1f; }
+.account-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.account-actions button { padding: 10px 16px; border: 2px solid #39372e; background: #fff8e8; font: inherit; font-weight: 700; cursor: pointer; }
