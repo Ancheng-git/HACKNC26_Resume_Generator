@@ -1,19 +1,24 @@
 """Local-only HTTP bridge. Run with one Uvicorn worker, without --reload."""
+import asyncio
 from contextlib import asynccontextmanager
+import json
 import os
 from pathlib import Path as PathFile
 from typing import Literal
+from urllib.parse import quote
 
-from fastapi import FastAPI, HTTPException, Request, Query, Path
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Query, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 from starlette.datastructures import UploadFile
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .backgrounds import UploadBodyLimit
 
+from .db import Database
 from .runner import BusyError, Runner
 from dotenv import load_dotenv
 
@@ -35,9 +40,23 @@ class GenerationRequest(BaseModel):
         return value
 
 
-def create_app(runner=None, jobs=None):
+class Credentials(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    email: str = Field(max_length=254, pattern=r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+    password: str = Field(min_length=8, max_length=128)
+
+
+DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+Kind = Literal['ats_resume', 'professional_resume', 'professional_cover_letter']
+
+
+def create_app(runner=None, jobs=None, db=None):
     load_dotenv(PathFile(__file__).resolve().parent.parent / '.env', override=False)
     runner = runner or Runner()
+    if db is None and os.environ.get('DATABASE_URL'):
+        db = Database(os.environ['DATABASE_URL'])
+    daily_limit = int(os.environ.get('RESUME_DAILY_LIMIT', '3'))
+    hosts = [s.strip() for s in os.environ.get('RESUME_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]').split(',') if s.strip()]
     jobs = jobs or JobBoard()
     origins = [s.strip() for s in os.environ.get('RESUME_FRONTEND_ORIGINS', '').split(',') if s.strip()]
     if '*' in origins or 'null' in origins:
@@ -45,14 +64,16 @@ def create_app(runner=None, jobs=None):
 
     @asynccontextmanager
     async def lifespan(app):
+        if db:
+            await asyncio.to_thread(db.init)
         yield
         await runner.close()
 
     app = FastAPI(title='Local resume backend', lifespan=lifespan)
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=['localhost', '127.0.0.1', '[::1]'])
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=hosts)
     app.add_middleware(UploadBodyLimit)
     app.add_middleware(CORSMiddleware, allow_origins=origins,
-                       allow_methods=['GET', 'POST'], allow_headers=['Content-Type'])
+                       allow_methods=['GET', 'POST', 'PUT'], allow_headers=['Content-Type', 'Authorization'])
 
     @app.middleware('http')
     async def check_origin(request, call_next):
@@ -103,12 +124,87 @@ def create_app(runner=None, jobs=None):
                 raise HTTPException(422, 'Upload fields must contain files.')
             return await runner.backgrounds.create(resumes[0], backgrounds, photos[0] if photos else None)
 
+    def user_for(authorization):
+        token = authorization[7:] if authorization and authorization.startswith('Bearer ') else None
+        user_id = db.user_for(token) if db and token else None
+        if user_id is None:
+            raise HTTPException(401, 'Sign in first.')
+        return user_id
+
+    def current_user(authorization: str | None = Header(default=None)):
+        if db is None:
+            raise HTTPException(503, 'Accounts are not configured on this server.')
+        return user_for(authorization)
+
+    async def save_task(task):
+        if task.get('user_id') is not None:
+            await asyncio.to_thread(db.finish_resume, task)
+
+    runner.on_done = save_task if db else None
+
+    @app.post('/api/auth/register', status_code=201)
+    def register(body: Credentials):
+        if db is None:
+            raise HTTPException(503, 'Accounts are not configured on this server.')
+        token = db.register(body.email.lower(), body.password)
+        if token is None:
+            raise HTTPException(409, 'This email is already registered.')
+        return {'token': token}
+
+    @app.post('/api/auth/login')
+    def login(body: Credentials):
+        if db is None:
+            raise HTTPException(503, 'Accounts are not configured on this server.')
+        token = db.login(body.email.lower(), body.password)
+        if token is None:
+            raise HTTPException(401, 'Incorrect email or password.')
+        return {'token': token}
+
+    @app.post('/api/auth/logout', status_code=204)
+    def logout(user_id=Depends(current_user), authorization: str | None = Header(default=None)):
+        db.logout(authorization[7:])
+
+    @app.get('/api/me')
+    def me(user_id=Depends(current_user)):
+        email, profile = db.me(user_id)
+        return {'email': email, 'profile': profile, 'daily_limit': daily_limit,
+                'used_today': db.recent_count(user_id)}
+
+    @app.put('/api/profile')
+    def save_profile(profile: dict, user_id=Depends(current_user)):
+        if len(json.dumps(profile)) > 100_000:
+            raise HTTPException(413, 'The profile must not exceed 100 KB.')
+        db.save_profile(user_id, profile)
+        return {'profile': profile}
+
+    @app.get('/api/resumes')
+    def resumes(user_id=Depends(current_user)):
+        return db.resumes(user_id)
+
+    @app.get('/api/resumes/{ident}/files/{kind}')
+    def resume_file(ident: str, kind: Kind, user_id=Depends(current_user)):
+        row = db.resume_file(user_id, ident, kind)
+        if row is None:
+            raise HTTPException(404, 'The file is unavailable.')
+        return Response(row[1], media_type=DOCX,
+            headers={'Content-Disposition': f"attachment; filename*=UTF-8''{quote(row[0])}"})
+
     @app.post('/api/generations', status_code=202)
-    async def generate(body: GenerationRequest):
+    async def generate(body: GenerationRequest, authorization: str | None = Header(default=None)):
+        # With a database (hosted mode), generation needs an account and is rate-limited per user.
+        user_id = await asyncio.to_thread(user_for, authorization) if db else None
+        if db and body.background_id is None:
+            # Without a pack the runner falls back to the server owner's own reference/ files.
+            raise HTTPException(422, 'Upload your resume and photo before generating.')
+        if user_id is not None and await asyncio.to_thread(db.recent_count, user_id) >= daily_limit:
+            raise HTTPException(429, f'You have used all {daily_limit} generations for the last 24 hours.')
         try:
-            return runner.submit(body.company, body.job_description, body.background_id)
+            result = runner.submit(body.company, body.job_description, body.background_id, user_id)
         except BusyError:
-            raise HTTPException(409, 'A task is already running. Try submitting again later.')
+            raise HTTPException(409, 'The generation queue is full. Try submitting again later.')
+        if user_id is not None:
+            await asyncio.to_thread(db.start_resume, result['id'], user_id, body.company)
+        return result
 
     @app.get('/api/generations/{ident}')
     async def status(ident: str):
@@ -138,6 +234,9 @@ def create_app(runner=None, jobs=None):
             raise HTTPException(409, 'Only successful tasks have published previews.')
         return FileResponse(path, media_type='image/png', headers={'Cache-Control': 'no-store'})
 
+    site = PathFile(__file__).resolve().parent.parent / 'frontend/dist'
+    if site.is_dir():  # Hosted mode: one origin serves the built frontend and the API.
+        app.mount('/', StaticFiles(directory=site, html=True), name='site')
     return app
 
 

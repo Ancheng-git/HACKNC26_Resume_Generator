@@ -1,0 +1,19 @@
+# Server deployment: `docker compose up -d --build` from this folder.
+# deploy/.env (never committed) holds SITE_HOST plus the app secrets from .env.example.
+services:
+  app:
+    build: ..
+    env_file: .env
+    environment:
+      RESUME_ALLOWED_HOSTS: ${SITE_HOST}
+      RESUME_FRONTEND_ORIGINS: https://${SITE_HOST}
+    restart: unless-stopped
+  caddy:
+    # Caddy fetches and renews the HTTPS certificate for SITE_HOST automatically.
+    image: caddy:2
+    command: caddy reverse-proxy --from ${SITE_HOST} --to app:8000
+    ports: ["80:80", "443:443"]
+    volumes: [caddy_data:/data]
+    restart: unless-stopped
+volumes:
+  caddy_data:

@@ -29,3 +29,6 @@ reference/photo.jpg
 # Personal generated example documents
 /output_sample/*
 !/output_sample/.gitkeep
+
+# Server secrets
+/deploy/.env

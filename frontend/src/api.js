@@ -1,4 +1,11 @@
-const API_BASE = 'http://127.0.0.1:8000';
+// The dev server (5173) talks to the local backend; a hosted build is served by the backend itself.
+const API_BASE = !globalThis.location?.origin || location.port === '5173' ? 'http://127.0.0.1:8000' : location.origin;
+const TOKEN_KEY = 'minejob-token';
+function authToken() { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } }
+function apiFetch(url, options = {}) {
+  const token = authToken();
+  return fetch(url, token ? { ...options, headers: { ...options.headers, Authorization: `Bearer ${token}` } } : options);
+}
 // Presentation only: retain the backend contract and translate its current messages here.
 const backendEnglish = {
   '\u65e0\u6548\u7684\u8bf7\u6c42\u957f\u5ea6。': 'The request length is invalid.',
@@ -87,13 +94,13 @@ async function uploadBackground(resume, photo, supplements) {
   form.append('resume', resume);
   supplements.forEach((file) => form.append('background_files', file));
   form.append('photo', photo);
-  return readResponse(await fetch(`${API_BASE}/api/backgrounds`, { method: 'POST', body: form }));
+  return readResponse(await apiFetch(`${API_BASE}/api/backgrounds`, { method: 'POST', body: form }));
 }
 
 async function downloadGenerationFile(file) {
   const url = new URL(file.url, API_BASE);
   if (url.origin !== new URL(API_BASE).origin) throw new Error('The download URL does not belong to the backend.');
-  const response = await fetch(url.href);
+  const response = await apiFetch(url.href);
   if (!response.ok) await readResponse(response);
   const objectURL = URL.createObjectURL(await response.blob());
   const link = document.createElement('a');

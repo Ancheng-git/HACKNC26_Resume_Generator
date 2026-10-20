@@ -181,7 +181,7 @@ async function pollApplication(application) {
   const controller = new AbortController();
   application.controller = controller;
   try {
-    const data = await readResponse(await fetch(`${API_BASE}/api/generations/${encodeURIComponent(taskId)}`, { signal: controller.signal }));
+    const data = await readResponse(await apiFetch(`${API_BASE}/api/generations/${encodeURIComponent(taskId)}`, { signal: controller.signal }));
     if (controller.signal.aborted || application.taskId !== taskId) return;
     Object.assign(application, { status: data.status, stage: data.stage, files: data.files, ats: data.ats, warnings: data.warnings, failure: data.failure || null, error: data.error ? englishMessage(data.error, 'Generation failed. Check the backend task logs before trying again.') : '' });
     if (application.status === 'queued' || application.status === 'running') application.timer = setTimeout(() => pollApplication(application), 2000);
@@ -218,7 +218,7 @@ $('#job-form').addEventListener('submit', async (event) => {
   renderApplications();
   renderDocument();
   try {
-    const data = await readResponse(await fetch(`${API_BASE}/api/generations`, {
+    const data = await readResponse(await apiFetch(`${API_BASE}/api/generations`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ company, job_description: jobDescription, background_id: state.backgroundId }),
     }));
     if (typeof data.id !== 'string' || !data.id.trim()) throw new Error('The backend did not return a valid task ID.');

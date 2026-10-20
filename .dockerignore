@@ -1,0 +1,22 @@
+.git
+.env
+.claude/*
+!.claude/commands
+**/node_modules
+**/__pycache__
+backend/.venv
+backend/runs
+backend/backgrounds
+frontend/dist
+frontend/src/vendor
+output
+output_sample
+jobs/applied
+# Personal resume sources must never be baked into a public image.
+reference/core-resume.docx
+reference/photo.jpg
+reference/background-notes.md
+reference/style-examples
+/professional_*.json
+/cover_professional_*.json
+/keywords_*.json
